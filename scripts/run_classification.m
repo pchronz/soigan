@@ -1,3 +1,4 @@
+pkg load lds
 pkg load nan
 more off
 
@@ -41,21 +42,37 @@ for cl = 1:length(classlabels(1, :))
 
   classlabel_orig = classlabel;
 
-  min_w = 50;
-  max_w = 51;
+  min_w = 0;
+  max_w = 0;
   errors_mean = zeros(max_w - min_w + 1, 4);
   errors_var = zeros(max_w - min_w + 1, 4);
   for w = min_w : max_w;
     w
 
+    %disp('Starting to train the LDS')
+    %tic()
+    % XXX filtering does not seem to work --> after 2 iterations the learner runs into a singularity
+    %% learn the LDS and apply the resulting Kalman filter for the preprocessing phase as smoother
+    %D = preprocessBySplitting(D_orig, classlabel_orig, w);
+    %dim_z = 3;
+    %[lds, muhats, likelihoods] = learnLDS(D, 5, dim_z, 0.1);
+    %M = length(D(1, 1, :));
+    %D_filtered = zeros(M * (w + 1), dim_z);
+    %for m = 1:M
+    %  [Z_mu, Z_cov] = filterSequence(lds, D(:, :, m));
+    %  D_filtered(Z_mu')
+    %endfor
+    %toc()
+
     % [D, classlabel] = preprocessByAggregation(D_orig, classlabel_orig);
     [D, classlabel] = preprocessByConcatenation(D_orig, classlabel_orig, w);
+    disp('#########################################################')
     disp('Number of class speciments in the training and test set: ');
     disp(sum(classlabel == 1))
     disp(sum(classlabel == 2))
 
     % TODO XXX why are the results so bad if I switch preprocessing and normalization?
-    % again prune dimensins with zero-variance this is needed since new 'uninformative dimensions might have been introduced due to changing the format of the data
+    % again prune dimensions with zero-variance this is needed since new 'uninformative dimensions might have been introduced due to changing the format of the data
     D(:, var(D) == 0) = [];
     % normalize the data
     m=mean(D);
