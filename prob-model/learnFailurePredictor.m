@@ -1,4 +1,6 @@
 function [mus, Sigmas, rho, pi] = learnFailurePredictor(K, X, d, max_iter)
+  disp('Init tic')
+  tic()
   [D, I, N] = size(X);
   % starting the learning phase
   % allocate space for the model parameters
@@ -22,7 +24,12 @@ function [mus, Sigmas, rho, pi] = learnFailurePredictor(K, X, d, max_iter)
   pi_prev = pi;
   rho_prev = rho;
 
+  disp('Init toc')
+  toc()
+
   for it = 1:max_iter
+    disp('E-step tic');
+    tic()
     it
     % save the current values before updating the params in this iteration
     mus_prev = mus;
@@ -68,7 +75,11 @@ function [mus, Sigmas, rho, pi] = learnFailurePredictor(K, X, d, max_iter)
       disp('Singularity!');
       break;
     endif
+    disp('E-step toc')
+    toc()
 
+    disp('M-step tic')
+    tic()
     % M-step
     % rho
     for l = 1:K^I
@@ -145,18 +156,19 @@ function [mus, Sigmas, rho, pi] = learnFailurePredictor(K, X, d, max_iter)
     pi
 
     % compute and monitor for convergence
-    delta_mu = norm(mus - mus_prev)
-    delta_Sigma = norm(sum(Sigmas - Sigmas_prev, 3))
-    delta_pi = norm(pi - pi_prev)
-    delta_rho = norm(rho - rho_prev)
+    delta_mu = 1/(D*K) * norm(mus - mus_prev)
+    delta_Sigma = 1/(D*(D-1)*K) * norm(sum(Sigmas - Sigmas_prev, 3))
+    delta_pi = 1/K * norm(pi - pi_prev)
+    delta_rho = 1/(K^I) * norm(rho - rho_prev)
     % XXX these values are chosen arbitrarily based on the assumption that the input vectors are scaled to be in [0, 1]
     % TODO one might want to use a sliding window to assess the convergence, since EM can have long plateaus
     if(delta_mu < 0.0001 && delta_Sigma < 0.0001 && delta_pi < 0.0001 && delta_rho < 0.0001)
       disp('Breaking due to small changes in model parameters');
       break;
     endif
+    disp('M-step toc')
+    toc()
   endfor
-
 endfunction
 
 
