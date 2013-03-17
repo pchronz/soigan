@@ -5,7 +5,7 @@ function [mus, Sigmas, rho, pi] = learnFailurePredictor(K, X, d, max_iter)
   % starting the learning phase
   % allocate space for the model parameters
   mus = zeros(D, K);
-  Sigmas = zeros(D)(:, :, ones(1, K));
+  Sigmas = eye(D)(:, :, ones(1, K));
   pi = 1/K * ones(K, 1);
   rho = 0.5 * ones(K^I, 1);
 
@@ -43,38 +43,53 @@ function [mus, Sigmas, rho, pi] = learnFailurePredictor(K, X, d, max_iter)
     % nevertheless we will need the posterior many times, so it should help us quite a lot
     % let's get it over with...
     p_Z = zeros(K^I, N);
+    M = 200;
+    M_over = 10;
+    Z_sampled = zeros(K, I, M, N);
     for n = 1:N
-      % iteration of the states in Z_n
-      for l = 1:K^I
-        % transform the decimal number into the matrix Z_n with column vectors coded as 1-of-K
-        [Z_n, z] = dec2oneofK(l, K, I);
-        p_d_n = rho(l)^d(n) * (1-rho(l))^(1-d(n));
-        p_X_n = 1;
-        for i = 1:I
-          % select the right mixture component for this state vector
-          mu_k = mus(:, str2num(z(1, i)) + 1);
-          Sigma_k = Sigmas(:, :, str2num(z(1, i)) + 1);
-          % compute the likelihood for the system observations and multiply by the total likelihood for all systems
-          % XXX fix to multivariate normal
-          % XXX what to do if this value becomes small beyond machine precision? This might happen when I becomes large.
-          % ==> probably then this value does not matter anyway and we keep it at zero.
-          p_X_n = p_X_n * mvnpdf(X(:, i, n)', mu_k', Sigma_k);
-        endfor
-        % p_Z_n now
-        % select the right components
-        Pi = pi(:, ones(1, I));
-        pi_l = Pi(Z_n);
-        p_Z_n = prod(pi_l);
-        p_Z(l, n) = p_d_n * p_X_n * p_Z_n;
+      % choose a random initial state
+      l = randi(K^I);
+      [Z_n_old, z] = dec2oneofK(l, K, I);
+      % compute the probability for the current state
+      p_Z_old = rho(l)^d(n) * (1-rho(l))^(1-d(n));
+      for i = 1:I
+        % choose the right mixture component
+        mu_k = mus * Z_n_old(:, i);
+        Sigma_k = Sigmas(:, :, str2num(z(1, i)) + 1);
+        pi_k = pi' * Z_n_old(:, i);
+        p_Z_old = p_Z_old * pi_k * mvnpdf(X(:, i, n)', mu_k, Sigma_k);
       endfor
+      Z_n_sampled = zeros(K, I, M*M_over);
+      for m = 1:(M*M_over)
+        % choose another random state sampled from a uniform distribution
+        l = randi(K^I);
+        [Z_n_new, z] = dec2oneofK(l, K, I);
+        % compute the probability for the new state
+        p_Z_new = rho(l)^d(n) * (1-rho(l))^(1-d(n));
+        for i = 1:I
+          % choose the right mixture component
+          mu_k = mus * Z_n_new(:, i);
+          Sigma_k = Sigmas(:, :, str2num(z(1, i)) + 1);
+          pi_k = pi' * Z_n_new(:, i);
+          p_Z_new = p_Z_new * pi_k * mvnpdf(X(:, i, n)', mu_k, Sigma_k);
+        endfor
+        A = 1;
+        if(p_Z_old > 0)
+          A = min(1, p_Z_new/p_Z_old);
+        endif
+        % TODO compute hit-rate or the expected acceptance or the average acceptance
+        if(rand(1) >= A)
+          Z_n_sampled(:, :, m) = Z_n_new;
+          Z_n_old = Z_n_new;
+          p_Z_old = p_Z_new;
+        else
+          Z_n_sampled(:, :, m) = Z_n_old;
+        endif
+      endfor
+      % subsample
+      sub_idx = logical(repmat([1, zeros(1, M_over - 1)], 1, M));
+      Z_sampled(:, :, :, n) = Z_n_sampled(:, :, sub_idx);
     endfor
-    % normalize the values
-    p_Z = p_Z ./ sum(p_Z)(ones(K^I, 1), :);
-    gotnan = sum(sum(isnan(p_Z)));
-    if(gotnan) 
-      disp('Singularity!');
-      break;
-    endif
     disp('E-step toc')
     toc()
 
@@ -82,74 +97,44 @@ function [mus, Sigmas, rho, pi] = learnFailurePredictor(K, X, d, max_iter)
     tic()
     % M-step
     % rho
-    for l = 1:K^I
-      rho(l) = sum(p_Z(l, :) * d') / sum(p_Z(l, :));
+    L = zeros(N, M);
+    for n = 1:N
+      for m = 1:M
+        L(n, m) = oneOfK2Dec(Z_sampled(:, :, m, n));
+      endfor
+    endfor
+    l = unique(reshape(L, 1, N*M));
+    for el = l
+      l_n = sum(double(L == el), 2);
+      rho(el) = (l_n' * d') / sum(l_n);
     endfor
     % pi
-    for k = 1:K
-      pi(k) = 0;
-      for n = 1:N
-        for l = 1:K^I
-          [Z_n, z] = dec2oneofK(l, K, I);
-          pi(k) = pi(k) + p_Z(l, n) * sum(Z_n(k, :), 2);
-        endfor
-      endfor
-      pi(k) = 1/(I*N) * pi(k);
-    endfor
+    pi = 1/(I*N*M) * sum(sum(sum(Z_sampled, 4), 3), 2);
     % mu
     for k = 1:K
       mus(:, k) = zeros(D, 1);
+      Z_sampled_summed = reshape(sum(Z_sampled, 3), K, I, N);
       for n = 1:N
-        for l = 1:K^I
-          [Z_n, z] = dec2oneofK(l, K, I);
-          mus(:, k) = mus(:, k) + p_Z(l, n) * sum(X(:, :, n) * diag(Z_n(k, :)), 2);
-        endfor
+        mus(:, k) = mus(:, k) + X(:, :, n) * Z_sampled_summed(k, :, n)';
       endfor
-      % normalize
-      C = 0;
-      for n = 1:N
-        for l = 1:K^I
-          [Z_n, z] = dec2oneofK(l, K, I);
-          C = C + p_Z(l, n) * sum(Z_n(k, :));
-        endfor
-      endfor
-      mus(:, k) = (1/C) .* mus(:, k);
     endfor
+    % normalize the mus
+    mus = mus * diag(1./(I * N * M * pi'));
     % Sigma
     for k = 1:K
       Sigmas(:, :, k) = zeros(D);
+      Z_sampled_summed = reshape(sum(Z_sampled, 3), K, I, N);
       for n = 1:N
-        for l = 1:K^I
-          [Z_n, z] = dec2oneofK(l, K, I);
-          X_n = X(:, :, n);
-          % broadcast the mu_k vector 
-          mu_ks = mus(:, k)(:, ones(1, I));
-          dev = X_n - mu_ks;
-          % the columns of the Kronecker product are the matrices of the outer products of the deviations
-          E = reshape(eye(I), 1, I^2);
-          Dev = kron(dev, dev);
-          % only select the matrices where the inidices of the multiplied vectors are the same (i x i); quasi the diagonal matrices of the Kronecker product
-          Dev = Dev(:, logical(E));
-          assert(size(Dev, 2) == I);
-          % filter the relevant matrices the weights of the latent variable states for component k
-          Dev = Dev(:, Z_n(k, :));
-          % sum it up and reshape to obtain the unweighted (via posterior) result
-          Sigma_data = reshape(sum(Dev, 2), D, D);
-
-          Sigmas(:, :, k) = Sigmas(:, :, k) + p_Z(l, n) .* Sigma_data;
+        X_n = X(:, :, n);
+        Dev_k = X_n - mus(:, k)(:, ones(1, I));
+        for i = 1:I
+          Sigmas(:, :, k) = Sigmas(:, :, k) + Dev_k(:, i) * Dev_k(:, i)' * Z_sampled_summed(k, i, n);
         endfor
       endfor
-      % normalize
-      C = 0;
-      for n = 1:N
-        for l = 1:K^I
-          [Z_n, z] = dec2oneofK(l, K, I);
-          C = C + p_Z(l, n) * sum(Z_n(k, :));
-        endfor
-      endfor
-      Sigmas(:, :, k) = 1/C * Sigmas(:, :, k);
+      % normalize the Sigmas
+      Sigmas(:, :, k) = 1/(I * N * M * pi(k)) * Sigmas(:, :, k);
     endfor
-
+    
     rho
     mus
     Sigmas

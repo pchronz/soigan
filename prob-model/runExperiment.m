@@ -2,16 +2,18 @@ more off
 
 pkg load statistics
 
+
+% TODO predictive density
+% TODO augment baseline model
 % TODO sampling
 % TODO variational inference
-% TODO Bayesian
 
 % create the data first
 % D x I x N
 N = 100;
 % mixture components
 I = 3;
-D = 3;
+D = 2;
 X_1 = mvnrnd(0.7 * ones(1, D), 0.01 * eye(D) + 0 * rotdim(eye(D), 1), I*N)';
 %X_1 = mvnrnd(0.7 * ones(1, D), 0.01 * eye(D) + 0 * rotdim(eye(D), 1), I*N*1/4)';
 %X_2 = mvnrnd(0.3 * ones(1, D), 0.05 * eye(D) + 0 * rotdim(eye(D), 1), I*N*2/4)';
@@ -43,11 +45,11 @@ toc()
 
 disp('Multi-mixture model training')
 tic()
-[mus, Sigmas, rho, pi] = learnFailurePredictor(2, X, d, 50);
+[mus, Sigmas, rho, pi] = learnExactIndependent(2, X, d, 10);
 toc()
 
 % evalute the Akaike information criterion
-aic = computeAic(mus, Sigmas, rho, pi, X, d);
+aic = computeAicIndependent(mus, Sigmas, rho, pi, X, d);
 
 rho
 mus
@@ -61,7 +63,7 @@ N_test = size(X_test, 3);
 hits = 0;
 hits_baseline = 0;
 for n = 1:N_test
-  [p_0, p_1] = predictFailure(X_test(:, :, n), mus, Sigmas, rho, pi);
+  [p_0, p_1] = predictExactIndependent(X_test(:, :, n), mus, Sigmas, rho, pi);
   hits = hits + double((p_0 < p_1) == d_test(n));
 
   [p_0, p_1] = predictBaseline(X_test(:, :, n), centers, rho_base);
