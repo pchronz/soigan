@@ -9,16 +9,17 @@ function [mus, Sigmas, rho, pi] = learnExactIndependent(K, X, d, max_iter)
   pi = 1/K*ones(K, I);
   rho = 0.5 * ones(K^I, 1);
 
-  % run k-means to obtain an initial estimate for the mixture components (mean and covariance)
-  for i = 1:I
-    X_i = reshape(X(:, i, :), D, N);
-    [idx, centers] = kmeans(X_i', K);
-    mus(:, :, i) = centers';
-    % compute the intra-cluster covariance and use it to initialize the component covariance
-    for k = 1:K
-      Sigmas(:, :, k, i) = cov(X_i(:, idx' == k)');
-    endfor
-  endfor
+  % XXX
+  %% run k-means to obtain an initial estimate for the mixture components (mean and covariance)
+  %for i = 1:I
+  %  X_i = reshape(X(:, i, :), D, N);
+  %  [idx, centers] = kmeans(X_i', K);
+  %  mus(:, :, i) = centers';
+  %  % compute the intra-cluster covariance and use it to initialize the component covariance
+  %  for k = 1:K
+  %    Sigmas(:, :, k, i) = cov(X_i(:, idx' == k)');
+  %  endfor
+  %endfor
 
   % keep a copy of the previous model params to monitor the progress
   mus_prev = mus;
@@ -86,40 +87,32 @@ function [mus, Sigmas, rho, pi] = learnExactIndependent(K, X, d, max_iter)
     endfor
     rho = rho ./ sum(p_Z, 2);
     toc()
-    % pi
-    disp('M-step pi')
+    % pi, mus
+    disp('M-step pi, mus')
     tic()
     pi = pi .* 0;
-    for i = 1:I
-      for k = 1:K
-        for n = 1:N
-          for l = 1:K^I
-            [Z_n, z] = dec2oneofK(l, K, I);
-            pi(k, i) = pi(k, i) + Z_n(k, i) * p_Z(l, n);
-          endfor
-        endfor
-      endfor
-    endfor
-    pi = pi ./ N;
-    toc()
-    % mus
-    disp('M-step mus')
-    tic()
     mus = mus .* 0;
     for i = 1:I
       for k = 1:K
+        % mus
         mu_norm = 0;
         for n = 1:N
           for l = 1:K^I
-            [Z_n, z] = dec2oneofK(l, K, I);
+            [Z_n, z] = dec2oneOfK(l, K, I);
+            % pi
+            pi(k, i) = pi(k, i) + Z_n(k, i) * p_Z(l, n);
+            % mus
             mus(:, k, i) = mus(:, k, i) + p_Z(l, n) * Z_n(k, i) * X(:, i, n);
             mu_norm = mu_norm + p_Z(l, n) * Z_n(k, i);
           endfor
         endfor
+        % mus
         mus(:, k, i) = mus(:, k, i) ./ mu_norm;
       endfor
     endfor
+    pi = pi ./ N;
     toc()
+    % XXX There is a data dependency between mus and Sigmas, so they cannot be integrated in the same loop
     % Sigmas
     disp('M-step Sigmas')
     tic()

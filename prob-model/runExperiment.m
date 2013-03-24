@@ -3,8 +3,8 @@ more off
 pkg load statistics
 
 
-% TODO predictive density
 % TODO augment baseline model
+% TODO implement hot spots in C
 % TODO sampling
 % TODO variational inference
 
@@ -14,6 +14,7 @@ N = 100;
 % mixture components
 I = 3;
 D = 2;
+K = 2;
 X_1 = mvnrnd(0.7 * ones(1, D), 0.01 * eye(D) + 0 * rotdim(eye(D), 1), I*N)';
 %X_1 = mvnrnd(0.7 * ones(1, D), 0.01 * eye(D) + 0 * rotdim(eye(D), 1), I*N*1/4)';
 %X_2 = mvnrnd(0.3 * ones(1, D), 0.05 * eye(D) + 0 * rotdim(eye(D), 1), I*N*2/4)';
@@ -40,12 +41,12 @@ d = d(not(idx));
 
 disp('Baseline model training')
 tic()
-[centers, rho_base] = learnBaselineModel(2, X, d);
+[centers, rho_base] = learnBaselineModel(K, X, d);
 toc()
 
 disp('Multi-mixture model training')
 tic()
-[mus, Sigmas, rho, pi] = learnExactIndependent(2, X, d, 10);
+[mus, Sigmas, rho, pi] = learnExactIndependent(K, X, d, 5);
 toc()
 
 % evalute the Akaike information criterion
