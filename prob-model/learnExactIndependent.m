@@ -90,27 +90,32 @@ function [mus, Sigmas, rho, pi] = learnExactIndependent(K, X, d, max_iter)
     % pi, mus
     disp('M-step pi, mus')
     tic()
-    pi = pi .* 0;
-    mus = mus .* 0;
-    for i = 1:I
-      for k = 1:K
-        % mus
-        mu_norm = 0;
-        for n = 1:N
-          for l = 1:K^I
-            [Z_n, z] = dec2oneOfK(l, K, I);
-            % pi
-            pi(k, i) = pi(k, i) + Z_n(k, i) * p_Z(l, n);
-            % mus
-            mus(:, k, i) = mus(:, k, i) + p_Z(l, n) * Z_n(k, i) * X(:, i, n);
-            mu_norm = mu_norm + p_Z(l, n) * Z_n(k, i);
-          endfor
-        endfor
-        % mus
-        mus(:, k, i) = mus(:, k, i) ./ mu_norm;
-      endfor
-    endfor
-    pi = pi ./ N;
+    [mus, pi] = maxMuPi(p_Z, X, K);
+    % toc()
+    % tic()
+    % pi = pi .* 0;
+    % mus = mus .* 0;
+    % for i = 1:I
+    %   for k = 1:K
+    %     % mus
+    %     mu_norm = 0;
+    %     for n = 1:N
+    %       for l = 1:K^I
+    %         [Z_n, z] = dec2oneOfK(l, K, I);
+    %         % pi
+    %         pi(k, i) = pi(k, i) + Z_n(k, i) * p_Z(l, n);
+    %         % mus
+    %         mus(:, k, i) = mus(:, k, i) + p_Z(l, n) * Z_n(k, i) * X(:, i, n);
+    %         mu_norm = mu_norm + p_Z(l, n) * Z_n(k, i);
+    %       endfor
+    %     endfor
+    %     % mus
+    %     mus(:, k, i) = mus(:, k, i) ./ mu_norm;
+    %   endfor
+    % endfor
+    % pi = pi ./ N;
+    % assert(pi_fast == pi);
+    % assert(abs(sum(sum(sum(mus_fast))) - sum(sum(sum(mus)))) < 0.0001);
     toc()
     % XXX There is a data dependency between mus and Sigmas, so they cannot be integrated in the same loop
     % Sigmas
