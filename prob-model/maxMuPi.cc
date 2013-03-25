@@ -1,7 +1,7 @@
 #include <octave/oct.h>
 #include <octave/parse.h>
 #include <math.h>
-#include "dec2oneOfK.cc"
+#include "dec2oneOfKpure.cc"
 
 DEFUN_DLD (maxMuPi, args, nargout, "")
 {
@@ -33,8 +33,7 @@ DEFUN_DLD (maxMuPi, args, nargout, "")
           dec_conv_args(0) = l + 1;
           dec_conv_args(1) = K;
           dec_conv_args(2) = I;
-          // octave_value_list dec2_res = feval("dec2oneofK", dec_conv_args, 2);
-          octave_value_list dec2_res = dec2oneOfK(dec_conv_args);
+          octave_value_list dec2_res = dec2oneOfKpure(dec_conv_args);
           boolMatrix Z_n = dec2_res(0).bool_array_value();
           charMatrix z = dec2_res(0).char_array_value();
           // pi

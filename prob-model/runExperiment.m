@@ -5,16 +5,20 @@ pkg load statistics
 
 % TODO augment baseline model
 % TODO implement hot spots in C
-% TODO sampling
+% TODO sampling of exact posterior
+% TODO maximization based on sampling
+% TODO use OpenMP to parallelize
+% TODO scenario ranking
+% TODO dimension ranking
 % TODO variational inference
 
 % create the data first
 % D x I x N
 N = 100;
 % mixture components
-I = 3;
+I = 4;
 D = 2;
-K = 2;
+K = 3;
 X_1 = mvnrnd(0.7 * ones(1, D), 0.01 * eye(D) + 0 * rotdim(eye(D), 1), I*N)';
 %X_1 = mvnrnd(0.7 * ones(1, D), 0.01 * eye(D) + 0 * rotdim(eye(D), 1), I*N*1/4)';
 %X_2 = mvnrnd(0.3 * ones(1, D), 0.05 * eye(D) + 0 * rotdim(eye(D), 1), I*N*2/4)';
@@ -46,7 +50,7 @@ toc()
 
 disp('Multi-mixture model training')
 tic()
-[mus, Sigmas, rho, pi] = learnExactIndependent(K, X, d, 5);
+[mus, Sigmas, rho, pi] = learnExactIndependent(K, X, d, 50);
 toc()
 
 % evalute the Akaike information criterion

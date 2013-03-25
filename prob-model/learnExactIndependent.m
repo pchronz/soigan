@@ -9,17 +9,16 @@ function [mus, Sigmas, rho, pi] = learnExactIndependent(K, X, d, max_iter)
   pi = 1/K*ones(K, I);
   rho = 0.5 * ones(K^I, 1);
 
-  % XXX
   %% run k-means to obtain an initial estimate for the mixture components (mean and covariance)
-  %for i = 1:I
-  %  X_i = reshape(X(:, i, :), D, N);
-  %  [idx, centers] = kmeans(X_i', K);
-  %  mus(:, :, i) = centers';
-  %  % compute the intra-cluster covariance and use it to initialize the component covariance
-  %  for k = 1:K
-  %    Sigmas(:, :, k, i) = cov(X_i(:, idx' == k)');
-  %  endfor
-  %endfor
+  for i = 1:I
+    X_i = reshape(X(:, i, :), D, N);
+    [idx, centers] = kmeans(X_i', K);
+    mus(:, :, i) = centers';
+    % compute the intra-cluster covariance and use it to initialize the component covariance
+    for k = 1:K
+      Sigmas(:, :, k, i) = cov(X_i(:, idx' == k)');
+    endfor
+  endfor
 
   % keep a copy of the previous model params to monitor the progress
   mus_prev = mus;
@@ -48,13 +47,21 @@ function [mus, Sigmas, rho, pi] = learnExactIndependent(K, X, d, max_iter)
     % let's get it over with...
     disp('E-step tic');
     tic()
+    computePosterior(mus, Sigmas, pi, rho, X, d, K)
+    toc()
+    tic()
     p_Z = zeros(K^I, N);
     for n = 1:N
       for l = 1:K^I
-        [Z_n, z] = dec2oneofK(l, K, I);
+        [Z_n, z] = dec2oneOfK(l, K, I);
         % select the right mus
         mus_l = zeros(D, I);
-        z_idx = (base2dec(z(1, :)', K)) + 1;
+        % z_idx = (base2dec(z(1, :)', K)) + 1;
+        z_idx = zeros(I, 1);
+        for i = 1:I
+          z_idx(i) = base2decfast(z(1, i), K) + 1;
+        endfor
+        % assert(z_idx == z_idx_fast)
         for i = 1:I
           mus_l(:, i) = mus(:, z_idx(i), i);
         endfor
@@ -127,7 +134,7 @@ function [mus, Sigmas, rho, pi] = learnExactIndependent(K, X, d, max_iter)
         for n = 1:N
           diff_n = X(:, :, n) - reshape(mus(:, k, :), D, I);
           for l = 1:K^I
-            [Z_n, z] = dec2oneofK(l, K, I);
+            [Z_n, z] = dec2oneOfK(l, K, I);
             Sigmas(:, :, k, i) = Sigmas(:, :, k, i) + p_Z(l, n) * Z_n(k, i) * diff_n(:, i) * diff_n(:, i)';
             Sigma_norm = Sigma_norm + p_Z(l, n) * Z_n(k, i);
           endfor
