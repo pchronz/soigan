@@ -1,5 +1,5 @@
 #include <octave/oct.h>
-#include <math.h>
+#include "math.h"
 #include "dec2oneOfK.cc"
 #include "base2decpure.cc"
 
@@ -7,8 +7,16 @@
 // NIST Engineering Statistics Handbook 6.5.4.2
 // http://www.itl.nist.gov/div898/handbook/pmc/section5/pmc542.htm
 double mvnpdf(Matrix x, Matrix mu, Matrix Sigma) {
+  // XXX is this Pi any good?
+  double const Pi = 4 * atan(1);
   double p = 0.0;
+  int D = x.dims()(0);
   // TODO implement 
+  p = 1/std::pow(sqrt(2 * Pi), D);
+  double det = Sigma.determinant().value();
+  p *= 1/sqrt(det);
+  double exp = (-1/2 * (x - mu).transpose() * Sigma * (x - mu))(0, 0);
+  p *= std::exp(exp);
   return p;
 }
 
@@ -45,7 +53,7 @@ DEFUN_DLD (computePosterior, args, nargout, "") {
         octave_value_list base2dec_args(2);
         base2dec_args(0) = z(0, i);
         base2dec_args(1) = K;
-        z_idx(i, 0) = base2decpure(base2dec_args)(0).int_value() + 1;
+        z_idx(i, 0) = base2decpure(base2dec_args)(0).int_value();
       }
       for(int i = 0; i < I; i++) {
         for(int d = 0; d < D; d++) {
@@ -65,7 +73,7 @@ DEFUN_DLD (computePosterior, args, nargout, "") {
             Matrix Sigmas_idx(1, 4);
             Sigmas_idx(0, 0) = d1;
             Sigmas_idx(0, 1) = d2;
-            Sigmas_idx(0, 2) = z_idx(i, 0);
+            Sigmas_idx(0, 2) = z_idx(i, 0) - 1;
             Sigmas_idx(0, 3) = i;
             Sigmas_l(d1, d2, i) = Sigmas(Sigmas_idx);
           }
@@ -104,6 +112,7 @@ DEFUN_DLD (computePosterior, args, nargout, "") {
       }
     }
   }
+  //p_Z = p_Z * p_Z.sum().diag().inverse();
   // return
   octave_value_list retval(1);
   retval(0) = p_Z;
