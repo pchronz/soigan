@@ -14,7 +14,7 @@ pkg load statistics
 
 % create the data first
 % D x I x N
-N = 50;
+N = 5;
 % mixture components
 I = 2;
 D = 2;

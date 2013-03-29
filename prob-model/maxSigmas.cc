@@ -24,11 +24,7 @@ DEFUN_DLD (maxSigmas, args, nargout, "")
     for(int k = 0; k < K; k++) {
       double Sigma_norm = 0;
       for(int n = 0; n < N; n++) {
-        dim_vector diff_dim = dim_vector::alloc(3);
-        diff_dim(0) = D;
-        diff_dim(1) = I;
-        diff_dim(2) = N;
-        NDArray diff_n(diff_dim);
+        Matrix diff_n(D, I);
         for(int d = 0; d < D; d++) {
           for(int ix = 0; ix < D; ix++) {
             Matrix X_idx(1, 3);
@@ -39,9 +35,10 @@ DEFUN_DLD (maxSigmas, args, nargout, "")
             mus_idx(0, 0) = d;
             mus_idx(0, 1) = k;
             mus_idx(0, 2) = ix;
-            diff_n(X_idx) = X(X_idx) - mus(mus_idx);
+            diff_n(d, ix) = X(X_idx) - mus(mus_idx);
           }
         }
+        octave_stdout << "diff_n" << "\n";
         octave_stdout << diff_n << "\n";
         long int KtoI = pow(K, I);
         for(long int l = 0; l < KtoI; l++) {
