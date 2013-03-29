@@ -42,6 +42,7 @@ DEFUN_DLD (maxSigmas, args, nargout, "")
             diff_n(X_idx) = X(X_idx) - mus(mus_idx);
           }
         }
+        octave_stdout << diff_n << "\n";
         long int KtoI = pow(K, I);
         for(long int l = 0; l < KtoI; l++) {
           octave_value_list dec2args(3);

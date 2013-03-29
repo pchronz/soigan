@@ -138,6 +138,7 @@ function [mus, Sigmas, rho, pi] = learnExactIndependent(K, X, d, max_iter)
         Sigma_norm = 0;
         for n = 1:N
           diff_n = X(:, :, n) - reshape(mus(:, k, :), D, I);
+          diff_n
           for l = 1:K^I
             [Z_n, z] = dec2oneOfK(l, K, I);
             Sigmas(:, :, k, i) = Sigmas(:, :, k, i) + p_Z(l, n) * Z_n(k, i) * diff_n(:, i) * diff_n(:, i)';
