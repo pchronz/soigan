@@ -3,19 +3,15 @@
 #include "dec2oneOfK.cc"
 #include "base2decpure.cc"
 
-// XXX ad-hoc implementation, consider implementing according to 
-// NIST Engineering Statistics Handbook 6.5.4.2
-// http://www.itl.nist.gov/div898/handbook/pmc/section5/pmc542.htm
+// XXX ad-hoc implementation; should use Cholesky factorization instead
 double mvnpdf(Matrix x, Matrix mu, Matrix Sigma) {
   // XXX is this Pi any good?
   double const Pi = 4 * atan(1);
-  double p = 0.0;
   int D = x.dims()(0);
-  // TODO implement 
-  p = 1/std::pow(sqrt(2 * Pi), D);
+  double p = pow(2 * Pi, -D*0.5);
   double det = Sigma.determinant().value();
-  p *= 1/sqrt(det);
-  double exp = (-1/2 * (x - mu).transpose() * Sigma * (x - mu))(0, 0);
+  p *= 1.0/sqrt(det);
+  double exp = -0.5 * ((x - mu).transpose() * Sigma.inverse() * (x - mu))(0, 0);
   p *= std::exp(exp);
   return p;
 }
@@ -73,7 +69,7 @@ DEFUN_DLD (computePosterior, args, nargout, "") {
             Matrix Sigmas_idx(1, 4);
             Sigmas_idx(0, 0) = d1;
             Sigmas_idx(0, 1) = d2;
-            Sigmas_idx(0, 2) = z_idx(i, 0) - 1;
+            Sigmas_idx(0, 2) = z_idx(i, 0);
             Sigmas_idx(0, 3) = i;
             Sigmas_l(d1, d2, i) = Sigmas(Sigmas_idx);
           }
@@ -86,7 +82,7 @@ DEFUN_DLD (computePosterior, args, nargout, "") {
         pi_l(0, i) = pi(z_idx(i, 0), i);
       }
       // compute the posterior for the current state and observation
-      p_Z(l, n) = std::pow(rho(l, 0), d(n, 0)) * std::pow((1 - rho(l, 0)), (1 - d(n, 0)));
+      p_Z(l, n) = std::pow(rho(l, 0), d(0, n)) * std::pow((1 - rho(l, 0)), (1 - d(0, n)));
       for(int i = 0; i < I; i++) {
         Matrix x_n_i(D, 1);
         for(int d = 0; d < D; d++) {
@@ -112,7 +108,7 @@ DEFUN_DLD (computePosterior, args, nargout, "") {
       }
     }
   }
-  //p_Z = p_Z * p_Z.sum().diag().inverse();
+  p_Z = p_Z * p_Z.sum().diag().inverse();
   // return
   octave_value_list retval(1);
   retval(0) = p_Z;

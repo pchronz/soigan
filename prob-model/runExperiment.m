@@ -14,11 +14,11 @@ pkg load statistics
 
 % create the data first
 % D x I x N
-N = 100;
+N = 50;
 % mixture components
-I = 4;
+I = 2;
 D = 2;
-K = 3;
+K = 2;
 X_1 = mvnrnd(0.7 * ones(1, D), 0.01 * eye(D) + 0 * rotdim(eye(D), 1), I*N)';
 %X_1 = mvnrnd(0.7 * ones(1, D), 0.01 * eye(D) + 0 * rotdim(eye(D), 1), I*N*1/4)';
 %X_2 = mvnrnd(0.3 * ones(1, D), 0.05 * eye(D) + 0 * rotdim(eye(D), 1), I*N*2/4)';

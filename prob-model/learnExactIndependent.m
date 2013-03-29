@@ -9,7 +9,7 @@ function [mus, Sigmas, rho, pi] = learnExactIndependent(K, X, d, max_iter)
   pi = 1/K*ones(K, I);
   rho = 0.5 * ones(K^I, 1);
 
-  %% run k-means to obtain an initial estimate for the mixture components (mean and covariance)
+  % run k-means to obtain an initial estimate for the mixture components (mean and covariance)
   for i = 1:I
     X_i = reshape(X(:, i, :), D, N);
     [idx, centers] = kmeans(X_i', K);
@@ -47,43 +47,45 @@ function [mus, Sigmas, rho, pi] = learnExactIndependent(K, X, d, max_iter)
     % let's get it over with...
     disp('E-step tic');
     tic()
-    computePosterior(mus, Sigmas, pi, rho, X, d, K)
+    p_Z = computePosterior(mus, Sigmas, pi, rho, X, d, K);
     toc()
-    tic()
-    p_Z = zeros(K^I, N);
-    for n = 1:N
-      for l = 1:K^I
-        [Z_n, z] = dec2oneOfK(l, K, I);
-        % select the right mus
-        mus_l = zeros(D, I);
-        % z_idx = (base2dec(z(1, :)', K)) + 1;
-        z_idx = zeros(I, 1);
-        for i = 1:I
-          z_idx(i) = base2decfast(z(1, i), K) + 1;
-        endfor
-        % assert(z_idx == z_idx_fast)
-        for i = 1:I
-          mus_l(:, i) = mus(:, z_idx(i), i);
-        endfor
-        % select the right Sigmas
-        Sigmas_l = zeros(D, D, I);
-        for i = 1:I
-          Sigmas_l(:, :, i) = Sigmas(:, :, z_idx(i), i);
-        endfor
-        % select the right pis
-        pi_l = pi(logical(Z_n));
-        % compute the posterior for the current state and observation
-        p_Z(l, n) = rho(l)^d(n) * (1 - rho(l))^(1 - d(n));
-        for i = 1:I
-          p_x_n_i = mvnpdf(X(:, i, n)', mus_l(:, i)', Sigmas_l(:, :, i));
-          p_Z(l, n) = p_Z(l, n) * pi_l(i) * p_x_n_i;
-        endfor
-      endfor
-    endfor
-    % normalize
-    p_Z = p_Z ./ sum(p_Z);
-    disp('E-step toc')
-    toc()
+    % tic()
+    % p_Z = zeros(K^I, N);
+    % for n = 1:N
+    %   for l = 1:K^I
+    %     [Z_n, z] = dec2oneOfK(l, K, I);
+    %     % select the right mus
+    %     mus_l = zeros(D, I);
+    %     % z_idx = (base2dec(z(1, :)', K)) + 1;
+    %     z_idx = zeros(I, 1);
+    %     for i = 1:I
+    %       z_idx(i) = base2decfast(z(1, i), K) + 1;
+    %     endfor
+    %     % assert(z_idx == z_idx_fast)
+    %     for i = 1:I
+    %       mus_l(:, i) = mus(:, z_idx(i), i);
+    %     endfor
+    %     % select the right Sigmas
+    %     Sigmas_l = zeros(D, D, I);
+    %     for i = 1:I
+    %       Sigmas_l(:, :, i) = Sigmas(:, :, z_idx(i), i);
+    %     endfor
+    %     % select the right pis
+    %     pi_l = pi(logical(Z_n));
+    %     % compute the posterior for the current state and observation
+    %     p_Z(l, n) = rho(l)^d(n) * (1 - rho(l))^(1 - d(n));
+    %     for i = 1:I
+    %       p_x_n_i = mvnpdf(X(:, i, n)', mus_l(:, i)', Sigmas_l(:, :, i));
+    %       p_Z(l, n) = p_Z(l, n) * pi_l(i) * p_x_n_i;
+    %     endfor
+    %   endfor
+    % endfor
+    % % normalize
+    % p_Z = p_Z ./ sum(p_Z);
+    % sum(sum(abs(p_Z - p_Z_fast)))
+    % assert(sum(sum(abs(p_Z - p_Z_fast))) < 0.0001)
+    % disp('E-step toc')
+    % toc()
 
     % M-step
     disp('M-step rho')
@@ -128,6 +130,9 @@ function [mus, Sigmas, rho, pi] = learnExactIndependent(K, X, d, max_iter)
     % Sigmas
     disp('M-step Sigmas')
     tic()
+    [Sigmas_fast] = maxSigmas(X, mus, p_Z);
+    toc()
+    tic()
     for i = 1:I
       for k = 1:K
         Sigma_norm = 0;
@@ -143,13 +148,16 @@ function [mus, Sigmas, rho, pi] = learnExactIndependent(K, X, d, max_iter)
       endfor
     endfor
     toc()
+    Sigmas_fast
+    Sigmas
+    assert(sum(sum(sum(sum(abs(Sigmas - Sigmas_fast))))) < 0.0001)
     
     rho
     mus
     Sigmas
     pi
 
-    % compute and monitor for convergence
+    % monitor for convergence
     % TODO consider evaluating the changes for each component individually and then require for each component to change a certain amount
     delta_mu = 1/(D * K * I) * norm(reshape(mus - mus_prev, D, K * I))
     %delta_Sigma = 1/(D*(D-1)*K) * norm(sum(Sigmas - Sigmas_prev, 3))
