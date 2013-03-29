@@ -130,28 +130,26 @@ function [mus, Sigmas, rho, pi] = learnExactIndependent(K, X, d, max_iter)
     % Sigmas
     disp('M-step Sigmas')
     tic()
-    [Sigmas_fast] = maxSigmas(X, mus, p_Z);
+    [Sigmas] = maxSigmas(X, mus, p_Z);
     toc()
-    tic()
-    for i = 1:I
-      for k = 1:K
-        Sigma_norm = 0;
-        for n = 1:N
-          diff_n = X(:, :, n) - reshape(mus(:, k, :), D, I);
-          diff_n
-          for l = 1:K^I
-            [Z_n, z] = dec2oneOfK(l, K, I);
-            Sigmas(:, :, k, i) = Sigmas(:, :, k, i) + p_Z(l, n) * Z_n(k, i) * diff_n(:, i) * diff_n(:, i)';
-            Sigma_norm = Sigma_norm + p_Z(l, n) * Z_n(k, i);
-          endfor
-        endfor
-        Sigmas(:, :, k, i) = Sigmas(:, :, k, i) ./ Sigma_norm;
-      endfor
-    endfor
-    toc()
-    Sigmas_fast
-    Sigmas
-    assert(sum(sum(sum(sum(abs(Sigmas - Sigmas_fast))))) < 0.0001)
+    %tic()
+    %Sigmas = Sigmas .* 0;
+    %for i = 1:I
+    %  for k = 1:K
+    %    Sigma_norm = 0;
+    %    for n = 1:N
+    %      diff_n = X(:, :, n) - reshape(mus(:, k, :), D, I);
+    %      for l = 1:K^I
+    %        [Z_n, z] = dec2oneOfK(l, K, I);
+    %        Sigmas(:, :, k, i) = Sigmas(:, :, k, i) + p_Z(l, n) * Z_n(k, i) * diff_n(:, i) * diff_n(:, i)';
+    %        Sigma_norm = Sigma_norm + p_Z(l, n) * Z_n(k, i);
+    %      endfor
+    %    endfor
+    %    Sigmas(:, :, k, i) = Sigmas(:, :, k, i) ./ Sigma_norm;
+    %  endfor
+    %endfor
+    %toc()
+    %assert(sum(sum(sum(sum(abs(Sigmas - Sigmas_fast))))) < 0.0001)
     
     rho
     mus

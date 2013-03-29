@@ -4,7 +4,6 @@ pkg load statistics
 
 
 % TODO augment baseline model
-% TODO implement hot spots in C
 % TODO sampling of exact posterior
 % TODO maximization based on sampling
 % TODO use OpenMP to parallelize
@@ -14,11 +13,11 @@ pkg load statistics
 
 % create the data first
 % D x I x N
-N = 5;
+N = 500;
 % mixture components
-I = 2;
-D = 2;
-K = 2;
+I = 5;
+D = 3;
+K = 3;
 X_1 = mvnrnd(0.7 * ones(1, D), 0.01 * eye(D) + 0 * rotdim(eye(D), 1), I*N)';
 %X_1 = mvnrnd(0.7 * ones(1, D), 0.01 * eye(D) + 0 * rotdim(eye(D), 1), I*N*1/4)';
 %X_2 = mvnrnd(0.3 * ones(1, D), 0.05 * eye(D) + 0 * rotdim(eye(D), 1), I*N*2/4)';

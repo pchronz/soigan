@@ -20,17 +20,18 @@ DEFUN_DLD (maxSigmas, args, nargout, "")
   Sigmas_dims(2) = K;
   Sigmas_dims(3) = I;
   NDArray Sigmas(Sigmas_dims);
+  Sigmas.fill(0.0);
   for(int i = 0; i < I; i++) {
     for(int k = 0; k < K; k++) {
       double Sigma_norm = 0;
       for(int n = 0; n < N; n++) {
         Matrix diff_n(D, I);
         for(int d = 0; d < D; d++) {
-          for(int ix = 0; ix < D; ix++) {
+          for(int ix = 0; ix < I; ix++) {
             Matrix X_idx(1, 3);
-            X_idx(0) = d;
-            X_idx(1) = ix;
-            X_idx(2) = n;
+            X_idx(0, 0) = d;
+            X_idx(0, 1) = ix;
+            X_idx(0, 2) = n;
             Matrix mus_idx(1, 3);
             mus_idx(0, 0) = d;
             mus_idx(0, 1) = k;
@@ -38,8 +39,6 @@ DEFUN_DLD (maxSigmas, args, nargout, "")
             diff_n(d, ix) = X(X_idx) - mus(mus_idx);
           }
         }
-        octave_stdout << "diff_n" << "\n";
-        octave_stdout << diff_n << "\n";
         long int KtoI = pow(K, I);
         for(long int l = 0; l < KtoI; l++) {
           octave_value_list dec2args(3);
@@ -49,6 +48,7 @@ DEFUN_DLD (maxSigmas, args, nargout, "")
           octave_value_list dec2res = dec2oneOfKpure(dec2args);
           boolMatrix Z_n = dec2res(0).bool_array_value();
           charMatrix z = dec2res(1).char_array_value();
+          double z_n_k_i = Z_n(k, i) ? 1.0 : 0.0;
           for(int d1 = 0; d1 < D; d1++) {
             for(int d2 = 0; d2 < D; d2++) {
               Matrix Sigmas_idx(1, 4);
@@ -56,15 +56,20 @@ DEFUN_DLD (maxSigmas, args, nargout, "")
               Sigmas_idx(1) = d2;
               Sigmas_idx(2) = k;
               Sigmas_idx(3) = i;
-              double z_n_k_i = Z_n(k, i) ? 1.0 : 0.0;
-              Matrix diff_idx(1, 3);
-              diff_idx(0) = d1;
-              diff_idx(1) = d2;
-              diff_idx(2) = n;
-              Sigmas(Sigmas_idx) += p_Z(l, n) * z_n_k_i * diff_n(diff_idx);
-              Sigma_norm += p_Z(l, n) * z_n_k_i;
+              Sigmas(Sigmas_idx) = Sigmas(Sigmas_idx) + p_Z(l, n) * z_n_k_i * diff_n(d1, i) * diff_n(d2, i);
             }
           }
+          Sigma_norm += p_Z(l, n) * z_n_k_i;
+        }
+      }
+      for(int d1 = 0; d1 < D; d1++) {
+        for(int d2 = 0; d2 < D; d2++) {
+          Matrix Sigmas_idx(1, 4);
+          Sigmas_idx(0) = d1;
+          Sigmas_idx(1) = d2;
+          Sigmas_idx(2) = k;
+          Sigmas_idx(3) = i;
+          Sigmas(Sigmas_idx) /= Sigma_norm;
         }
       }
     }
