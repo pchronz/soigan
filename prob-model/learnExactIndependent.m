@@ -12,7 +12,18 @@ function [mus, Sigmas, rho, pi] = learnExactIndependent(K, X, d, max_iter)
   % run k-means to obtain an initial estimate for the mixture components (mean and covariance)
   for i = 1:I
     X_i = reshape(X(:, i, :), D, N);
-    [idx, centers] = kmeans(X_i', K);
+    empty = true;
+    idx = 0;
+    centers = 0;
+    while(empty)
+      try
+        [idx, centers] = kmeans(X_i', K);
+        empty = false;
+      catch
+        i
+        disp('Got an empty cluster, trying again...');
+      end_try_catch
+    endwhile
     mus(:, :, i) = centers';
     % compute the intra-cluster covariance and use it to initialize the component covariance
     for k = 1:K
@@ -48,6 +59,7 @@ function [mus, Sigmas, rho, pi] = learnExactIndependent(K, X, d, max_iter)
     disp('E-step tic');
     tic()
     p_Z = computePosterior(mus, Sigmas, pi, rho, X, d, K);
+    p_Z
     toc()
     % tic()
     % p_Z = zeros(K^I, N);
