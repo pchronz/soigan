@@ -33,7 +33,7 @@ X = rotdim(X, 1, [2, 3]);
 
 % the experimental parameters
 Delay = [0:1];
-It = 2;
+It = 20;
 max_K = 5;
 % the experimental results
 % accuracies
@@ -167,9 +167,9 @@ for delay = Delay
     it
 
     % [X, d] = loadEwsData();
-    % [X, d] = loadGoeGridData();
+    [X, d] = loadGoeGridData();
     % [X, d] = loadHEPhyData();
-    [X, d] = loadGoeGridFullData(delay);
+    % [X, d] = loadGoeGridFullData(delay);
     [D, I, N] = size(X);
     % XXX uncomment to run on a smaller dataset for development
     % N = 30;
