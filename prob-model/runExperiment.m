@@ -32,9 +32,9 @@ d = (sum(clusters, 2) >= 2)';
 X = rotdim(X, 1, [2, 3]);
 
 % the experimental parameters
-Delay = [0:1];
+Delay = [-1:1];
 It = 20;
-max_K = 5;
+max_K = 3;
 % the experimental results
 % accuracies
 baseline_accuracy = zeros(length(Delay), It, max_K);
@@ -154,7 +154,7 @@ svm_correctness_serial
 svm_training_serial
 svm_prediction_serial
 
-save experimentResultsSerial.mat max_K baseline_correctness_serial baseline_training_serial baseline_prediction_serial prob_model_correctness_serial prob_model_training_serial prob_model_prediction_serial svm_correctness_serial svm_training_serial svm_prediction_serial
+save experimentResultsSerial.mat d max_K baseline_correctness_serial baseline_training_serial baseline_prediction_serial prob_model_correctness_serial prob_model_training_serial prob_model_prediction_serial svm_correctness_serial svm_training_serial svm_prediction_serial
 disp('The serial results have been saved')
 
 % PARALLEL EXPERIMENT
