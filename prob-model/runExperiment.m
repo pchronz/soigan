@@ -51,8 +51,8 @@ svm_prediction = zeros(length(Delay), It, max_K);
 
 % SERIAL EXPERIMENT
 % [X, d] = loadEwsData();
-[X, d] = loadGoeGridData();
-% [X, d] = loadHEPhyData();
+% [X, d] = loadGoeGridData();
+[X, d] = loadHEPhyData();
 % [X, d] = loadGoeGridFullData(delay);
 [D, I, N] = size(X);
 % result containers
@@ -167,8 +167,8 @@ for delay = Delay
     it
 
     % [X, d] = loadEwsData();
-    [X, d] = loadGoeGridData();
-    % [X, d] = loadHEPhyData();
+    % [X, d] = loadGoeGridData();
+    [X, d] = loadHEPhyData();
     % [X, d] = loadGoeGridFullData(delay);
     [D, I, N] = size(X);
     % XXX uncomment to run on a smaller dataset for development
