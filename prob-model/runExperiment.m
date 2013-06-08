@@ -75,7 +75,7 @@ for K = 2:max_K
   K
   for n = max_K:N - 1
     disp('n -- serial')
-    n
+    disp([num2str(n), '/', num2str(N - 1)])
     X_tr = X(:, :, 1:n);
     d_tr = d(1, 1:n);
     disp('Baseline model training --- serial')

@@ -34,39 +34,40 @@ endfor
 figure()
 for K = 2:max_K
   % total rate
-  subplot(max_K - 1, 3, 3*(K - 2) + 1)
-  plot([2:N], baseline_hit_rate(2, 2:end, 1));
-  % 1-rate
-  subplot(max_K - 1, 3, 3*(K - 2) + 2)
-  plot([2:N], baseline_hit_rate(2, 2:end, 2));
-  % 0-rate
-  subplot(max_K - 1, 3, 3*(K - 2) + 3)
-  plot([2:N], baseline_hit_rate(2, 2:end, 3));
+  % subplot(max_K - 1, 3, 3*(K - 2) + 1)
+  subplot(max_K - 1, 1, K - 1)
+  plot([2:N], baseline_hit_rate(2, 2:end, 1), ';Total rate;', baseline_hit_rate(2, 2:end, 2), ';1-rate;', baseline_hit_rate(2, 2:end, 3), ';0-rate;');
+  ylabel(['Baseline accuracy, K = ', num2str(K)]);
+  %% 1-rate
+  %subplot(max_K - 1, 3, 3*(K - 2) + 2)
+  %plot([2:N], baseline_hit_rate(2, 2:end, 2), ';1-rate;');
+  %% 0-rate
+  %subplot(max_K - 1, 3, 3*(K - 2) + 3)
+  %plot([2:N], baseline_hit_rate(2, 2:end, 3), ';0-rate;');
 endfor
 % hit rate - SVM
 figure()
-subplot(1, 3, 1);
-plot([2:N], svm_hit_rate(1, 2:end));
-subplot(1, 3, 2);
-plot([2:N], svm_hit_rate(2, 2:end));
-subplot(1, 3, 3);
-plot([2:N], svm_hit_rate(3, 2:end));
+plot([2:N], svm_hit_rate(1, 2:end), ';Total rate;', svm_hit_rate(2, 2:end), ';1-rate;', svm_hit_rate(3, 2:end), ';0-rate;');
+ylabel('SVM accuracy');
 % learning - baseline
 figure()
 for K = [2:max_K]
   subplot(max_K - 1, 1, K - 1)
-  plot([2:N], baseline_training_serial(2, 2:end));
+  plot([2:N], baseline_training_serial(2, 2:end), ';Learning time;');
+  ylabel(['K = ', num2str(K)]);
 endfor
 % learning - SVM
 figure()
-plot([2:N], svm_training_serial(2:end));
+plot([2:N], svm_training_serial(2:end), ';Learning time;');
 % prediction - baseline
 figure()
 for K = [2:max_K]
   subplot(max_K - 1, 1, K - 1)
-  plot([2:N], baseline_prediction_serial(2, 2:end));
+  plot([2:N], baseline_prediction_serial(2, 2:end), ';Prediction time;');
+  ylabel(['K = ', num2str(K)]);
 endfor
 % prediction - SVM
 figure()
-plot([2:N], svm_prediction_serial(2:end));
+plot([2:N], svm_prediction_serial(2:end), ';Prediction time;');
+ylabel('SVM');
 
