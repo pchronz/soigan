@@ -75,7 +75,19 @@ for K = 2:max_K
   K
   for n = max_K:N - 1
     disp('n -- serial')
-    disp([num2str(n), '/', num2str(N - 1)])
+    disp([num2str(n), '/', num2str(N - 1), ' = ', num2str(n/N), '%'])
+    if(n >= max_K + 25)
+      slope = 19/(mean(baseline_training_serial(K, n - 6:n)) - mean(baseline_training_serial(K, n - 25:n - 19)));
+      remaining_iterations = N - n + (N - max_K)*(max_K - K);
+      % total[s], d, h, m, s
+      ETA = zeros(1, 5);
+      ETA(1) = slope * remaining_iterations;
+      ETA(2) = floor(ETA(1)/(60*60*24));
+      ETA(3) = floor(mod(ETA(1), 60*60*24)/(60*60));
+      ETA(4) = floor(mod(ETA(1), 60*60)/(60));
+      ETA(5) = floor(mod(ETA(1), 60));
+      disp(['ETA: ', num2str(ETA(2)), 'd ', num2str(ETA(3)), 'h ', num2str(ETA(4)), 'm ', num2str(ETA(5)), 's'])
+    endif
     X_tr = X(:, :, 1:n);
     d_tr = d(1, 1:n);
     disp('Baseline model training --- serial')
