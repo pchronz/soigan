@@ -32,7 +32,7 @@ d = (sum(clusters, 2) >= 2)';
 X = rotdim(X, 1, [2, 3]);
 
 % the experimental parameters
-Delay = [-1:1];
+Delay = [0:0];
 It = 20;
 max_K = 5;
 % the experimental results
@@ -50,10 +50,10 @@ prob_prediction = zeros(length(Delay), It, max_K);
 svm_prediction = zeros(length(Delay), It, max_K);
 
 % SERIAL EXPERIMENT
-[X, d] = loadEwsData();
+% [X, d] = loadEwsData();
 % [X, d] = loadGoeGridData();
 % [X, d] = loadHEPhyData();
-% [X, d] = loadGoeGridFullData(delay);
+[X, d] = loadGoeGridFullData(delay);
 [D, I, N] = size(X);
 % result containers
 baseline_correctness_serial = zeros(max_K, N);
@@ -166,10 +166,10 @@ for delay = Delay
     disp('Experiment iteration...')
     it
 
-    [X, d] = loadEwsData();
+    % [X, d] = loadEwsData();
     % [X, d] = loadGoeGridData();
     % [X, d] = loadHEPhyData();
-    % [X, d] = loadGoeGridFullData(delay);
+    [X, d] = loadGoeGridFullData(delay);
     [D, I, N] = size(X);
     % XXX uncomment to run on a smaller dataset for development
     % N = 30;
