@@ -53,7 +53,7 @@ svm_prediction = zeros(length(Delay), It, max_K);
 % [X, d] = loadEwsData();
 % [X, d] = loadGoeGridData();
 % [X, d] = loadHEPhyData();
-[X, d] = loadGoeGridFullData(delay);
+[X, d] = loadGoeGridFullData(0);
 [D, I, N] = size(X);
 % result containers
 baseline_correctness_serial = zeros(max_K, N);
