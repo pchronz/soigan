@@ -4,7 +4,7 @@ load experimentResultsSerial
 % transform the prediction hits/misses into a rates incrementally
 % clustering-based
 % K x N x total rate/1-rate/0-rate
-baseline_hit_rates = zeros(max_K, N, 3);
+baseline_hit_rate = zeros(max_K, N, 3);
 for K = [2:max_K]
   for n = 2:N
     baseline_hit_rate(K, n, 1) = sum(baseline_correctness_serial(K, 2:n))/(n - 1);
@@ -70,4 +70,13 @@ endfor
 figure()
 plot([2:N], svm_prediction_serial(2:end), ';Prediction time;');
 ylabel('SVM');
+
+% save the processed data for plotting it in R
+save baseline_hit_rate_serial.mat baseline_hit_rate 
+save svm_hit_rate.mat svm_hit_rate
+save baseline_training_serial.mat baseline_training_serial
+save baseline_prediction_serial.mat baseline_prediction_serial
+save svm_training_serial.mat svm_training_serial
+save svm_prediction_serial.mat svm_prediction_serial
+disp('The processed experimental results (serial) have been saved')
 
