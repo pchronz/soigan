@@ -65,6 +65,46 @@ prob_model_prediction_serial = zeros(max_K, N);
 svm_correctness_serial = zeros(1, N);
 svm_training_serial = zeros(1, N);
 svm_prediction_serial = zeros(1, N);
+
+% SVM
+for n = 1:N - 1
+  disp('SVM training and prediction')
+  n
+
+  X_tr = X(:, :, 1:n);
+  d_tr = d(1, 1:n);
+  % learn SVM
+  tic()
+  MODE.TYPE='rbf';
+  MODE.hyperparameter.c_value=rand(1)*250;
+  MODE.hyperparameter.gamma=rand(1)/10000;
+  [D, I, N] = size(X_tr);
+  CC = train_sc(reshape(X_tr, [D*I, N])', (d_tr + 1)', MODE);
+  % XXX why does the SVM not work below a certain number of training vectors?
+  elapsed = toc();
+  if(CC.model.totalSV > 0)
+    svm_training_serial(n) = elapsed;
+    % predict SVM
+    tic();
+    [D, I, N_te] = size(X(:, :, n + 1));
+    hits_svm = test_sc(CC, reshape(X(:, :, n + 1), [D*I, N_te])');
+    hits_svm = hits_svm.classlabel - 1;
+    hits_svm = sum(hits_svm == d(1, n + 1));
+    elapsed = toc();
+    svm_prediction_serial(n) = elapsed;
+    assert(hits_svm == 0 || hits_svm == 1);
+    svm_correctness_serial(n) = hits_svm;
+  else
+    % disp('SVM model failed at...')
+    % n
+    svm_training_serial(n) = -1;
+    svm_correctness_serial(n) = -1;
+    svm_prediction_serial(n) = -1;
+  endif
+endfor
+disp('SVM failures for n = ')
+[1:N](svm_correctness_serial == -1)
+
 % going one step ahead is fine as long as the time required for prediction and training
 % is less than the current time plus the time for which we wish to predict. Actually there
 % we also need to count in a slack that is the time until which the observed global value
@@ -116,47 +156,13 @@ for K = 2:max_K
     % elapsed = toc()
     % prob_model_prediction_serial(K, n + 1) = elapsed;
     % prob_model_correctness_serial(K, n + 1) = double((p_0 < p_1) == d(n + 1));
+
+    % better save than sorry
+    save experimentResultsSerial.mat d max_K baseline_correctness_serial baseline_training_serial baseline_prediction_serial prob_model_correctness_serial prob_model_training_serial prob_model_prediction_serial svm_correctness_serial svm_training_serial svm_prediction_serial
+    disp('The serial results have been saved')
+
   endfor
 endfor
-
-% SVM
-for n = 1:N - 1
-  disp('SVM training and prediction')
-  n
-
-  X_tr = X(:, :, 1:n);
-  d_tr = d(1, 1:n);
-  % learn SVM
-  tic()
-  MODE.TYPE='rbf';
-  MODE.hyperparameter.c_value=rand(1)*250;
-  MODE.hyperparameter.gamma=rand(1)/10000;
-  [D, I, N] = size(X_tr);
-  CC = train_sc(reshape(X_tr, [D*I, N])', (d_tr + 1)', MODE);
-  % XXX why does the SVM not work below a certain number of training vectors?
-  elapsed = toc();
-  if(CC.model.totalSV > 0)
-    svm_training_serial(n) = elapsed;
-    % predict SVM
-    tic();
-    [D, I, N_te] = size(X(:, :, n + 1));
-    hits_svm = test_sc(CC, reshape(X(:, :, n + 1), [D*I, N_te])');
-    hits_svm = hits_svm.classlabel - 1;
-    hits_svm = sum(hits_svm == d(1, n + 1));
-    elapsed = toc();
-    svm_prediction_serial(n) = elapsed;
-    assert(hits_svm == 0 || hits_svm == 1);
-    svm_correctness_serial(n) = hits_svm;
-  else
-    % disp('SVM model failed at...')
-    % n
-    svm_training_serial(n) = -1;
-    svm_correctness_serial(n) = -1;
-    svm_prediction_serial(n) = -1;
-  endif
-endfor
-disp('SVM failures for n = ')
-[1:N](svm_correctness_serial == -1)
 
 baseline_correctness_serial
 baseline_training_serial
@@ -167,9 +173,6 @@ prob_model_prediction_serial
 svm_correctness_serial
 svm_training_serial
 svm_prediction_serial
-
-save experimentResultsSerial.mat d max_K baseline_correctness_serial baseline_training_serial baseline_prediction_serial prob_model_correctness_serial prob_model_training_serial prob_model_prediction_serial svm_correctness_serial svm_training_serial svm_prediction_serial
-disp('The serial results have been saved')
 
 % PARALLEL EXPERIMENT
 for delay = Delay
@@ -305,13 +308,14 @@ for delay = Delay
   disp('baseline model mean and standard deviation')
   mean(baseline_accuracy(delay - min(Delay) + 1, :, :), 2)
   std(baseline_accuracy(delay - min(Delay) + 1, :, :), 0, 2)
+
+  % better save than sorry
+  save experimentResultsParallel.mat It max_K Delay baseline_accuracy baseline_learning baseline_prediction prob_accuracy prob_learning prob_prediction svm_accuracy svm_learning svm_prediction
+  disp('The parallel results have been saved')
 endfor
 
 baseline_accuracy
 
 svm_accuracy
-
-save experimentResultsParallel.mat It max_K Delay baseline_accuracy baseline_learning baseline_prediction prob_accuracy prob_learning prob_prediction svm_accuracy svm_learning svm_prediction
-disp('The parallel results have been saved')
 
 
