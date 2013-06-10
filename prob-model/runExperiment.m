@@ -50,10 +50,10 @@ prob_prediction = zeros(length(Delay), It, max_K);
 svm_prediction = zeros(length(Delay), It, max_K);
 
 % SERIAL EXPERIMENT
-[X, d] = loadEwsData();
+% [X, d] = loadEwsData();
 % [X, d] = loadGoeGridData();
 % [X, d] = loadHEPhyData();
-% [X, d] = loadGoeGridFullData(0);
+[X, d] = loadGoeGridFullData(0);
 [D, I, N] = size(X);
 % result containers
 baseline_correctness_serial = zeros(max_K, N);
@@ -76,6 +76,8 @@ for K = 2:max_K
   for n = max_K:N - 1
     disp('n -- serial')
     disp([num2str(n), '/', num2str(N - 1), ' = ', num2str(n/N), '%'])
+    disp('K -- serial')
+    disp([num2str(K), '/', num2str(max_K), ' = ', num2str(K/max_K), '%'])
     if(n >= max_K + 25)
       slope = 19/(mean(baseline_training_serial(K, n - 6:n)) - mean(baseline_training_serial(K, n - 25:n - 19)));
       remaining_iterations = N - n + (N - max_K)*(max_K - K);
@@ -178,10 +180,10 @@ for delay = Delay
     disp('Experiment iteration...')
     it
 
-    [X, d] = loadEwsData();
+    % [X, d] = loadEwsData();
     % [X, d] = loadGoeGridData();
     % [X, d] = loadHEPhyData();
-    % [X, d] = loadGoeGridFullData(delay);
+    [X, d] = loadGoeGridFullData(delay);
     [D, I, N] = size(X);
     % XXX uncomment to run on a smaller dataset for development
     % N = 30;
