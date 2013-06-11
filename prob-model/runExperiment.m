@@ -5,7 +5,6 @@ pkg load nan
 
 % TODO sampling of exact posterior
 % TODO maximization based on sampling
-% TODO use OpenMP to parallelize
 % TODO scenario ranking
 % TODO dimension ranking
 % TODO variational inference
@@ -110,10 +109,8 @@ disp('SVM failures for n = ')
 % we also need to count in a slack that is the time until which the observed global value
 % (via Cern) will be available and the time that we need to react and fix an error (MTTR).
 % baseline & prob model
-for K = 2:max_K
-  disp('K --- serial')
-  K
-  for n = max_K:N - 1
+for n = max_K:N - 1
+  for K = 2:max_K
     disp('n -- serial')
     disp([num2str(n), '/', num2str(N - 1), ' = ', num2str(n/N), '%'])
     disp('K -- serial')
