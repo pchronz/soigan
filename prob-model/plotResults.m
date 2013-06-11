@@ -8,8 +8,16 @@ baseline_hit_rate = zeros(max_K, N, 3);
 for K = [2:max_K]
   for n = 2:N
     baseline_hit_rate(K, n, 1) = sum(baseline_correctness_serial(K, 2:n))/(n - 1);
-    baseline_hit_rate(K, n, 2) = sum(baseline_correctness_serial(2, logical(d(2:n)))) / sum(d(2:n));
-    baseline_hit_rate(K, n, 3) = sum(baseline_correctness_serial(2, ~logical(d(2:n)))) / sum(!d(2:n));
+    if(sum(d(2:n)) > 0)
+      baseline_hit_rate(K, n, 2) = sum(baseline_correctness_serial(2, logical(d(2:n)))) / sum(d(2:n));
+    else
+      baseline_hit_rate(K, n, 2) = 0;
+    endif
+    if(sum(!d(2:n)) > 0)
+      baseline_hit_rate(K, n, 3) = sum(baseline_correctness_serial(2, ~logical(d(2:n)))) / sum(!d(2:n));
+    else
+      baseline_hit_rate(K, n, 3) = 0;
+    endif
   endfor
 endfor
 % SVM
@@ -22,12 +30,20 @@ for n = 2:N
   svm_hits = svm_correctness_serial(2:n) .* double(valid_idxs);
   if(sum(double(valid_idxs)) > 0)
     svm_hit_rate(1, n) = sum(svm_hits) / sum(double(valid_idxs));
-    svm_hit_rate(2, n) = sum(svm_hits .* d(2:n))/ sum(d(2:n));
-    svm_hit_rate(3, n) = sum(svm_hits .* !d(2:n))/ sum(!d(2:n));
+    if(sum(d(2:n)) > 0)
+      svm_hit_rate(2, n) = sum(svm_hits .* d(2:n))/ sum(d(2:n));
+    else
+      svm_hit_rate(2, n) = 0;
+    endif
+    if(sum(!d(2:n) > 0))
+      svm_hit_rate(3, n) = sum(svm_hits .* !d(2:n))/ sum(!d(2:n));
+    else
+      svm_hit_rate(3, n) = 0;
+    endif
   else
-    svm_hit_rate(1, n) = -1;
-    svm_hit_rate(2, n) = -1;
-    svm_hit_rate(3, n) = -1;
+    svm_hit_rate(1, n) = 0;
+    svm_hit_rate(2, n) = 0;
+    svm_hit_rate(3, n) = 0;
   endif
 endfor
 % hit rate - baseline
@@ -57,6 +73,8 @@ for K = [2:max_K]
   ylabel(['K = ', num2str(K)]);
 endfor
 % learning - SVM
+% set the "invalid" values to 0
+svm_training_serial(svm_training_serial == -1) = 0;
 figure()
 plot([2:N], svm_training_serial(2:end), ';Learning time;');
 % prediction - baseline
@@ -67,6 +85,8 @@ for K = [2:max_K]
   ylabel(['K = ', num2str(K)]);
 endfor
 % prediction - SVM
+% set the "invalid" values to 0
+svm_prediction_serial(svm_prediction_serial == -1) = 0;
 figure()
 plot([2:N], svm_prediction_serial(2:end), ';Prediction time;');
 ylabel('SVM');
