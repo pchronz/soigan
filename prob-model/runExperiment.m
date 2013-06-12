@@ -77,9 +77,11 @@ for n = 1:N - 1
   MODE.TYPE='rbf';
   MODE.hyperparameter.c_value=rand(1)*250;
   MODE.hyperparameter.gamma=rand(1)/10000;
+  [X_tr, d_tr] = balanceData(X_tr, d_tr);
   [D, I, N] = size(X_tr);
   CC = train_sc(reshape(X_tr, [D*I, N])', (d_tr + 1)', MODE);
   % XXX why does the SVM not work below a certain number of training vectors?
+  % ==> cause it ain't got more than one class observed!
   elapsed = toc();
   if(CC.model.totalSV > 0)
     svm_training_serial(n) = elapsed;
@@ -115,6 +117,7 @@ for n = max_K:N - 1
     disp([num2str(n), '/', num2str(N - 1), ' = ', num2str(n/N), '%'])
     disp('K -- serial')
     disp([num2str(K), '/', num2str(max_K), ' = ', num2str(K/max_K), '%'])
+    % XXX review ETA, since K and n have been swapped
     if(n >= max_K + 25)
       slope = 19/(mean(baseline_training_serial(K, n - 6:n)) - mean(baseline_training_serial(K, n - 25:n - 19)));
       remaining_iterations = N - n + (N - max_K)*(max_K - K);
