@@ -77,7 +77,9 @@ for n = 1:N - 1
   MODE.TYPE='rbf';
   MODE.hyperparameter.c_value=rand(1)*250;
   MODE.hyperparameter.gamma=rand(1)/10000;
-  [X_tr, d_tr] = balanceData(X_tr, d_tr);
+  if(sum(d_tr) > 0 && sum(!d_tr) > 0)
+    [X_tr, d_tr] = balanceData(X_tr, d_tr);
+  endif
   [D, I, N] = size(X_tr);
   CC = train_sc(reshape(X_tr, [D*I, N])', (d_tr + 1)', MODE);
   % XXX why does the SVM not work below a certain number of training vectors?
