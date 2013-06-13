@@ -106,6 +106,7 @@ for n = 1:N - 1
   endif
 endfor
 disp('SVM failures for n = ')
+[D, I, N] = size(X);
 [1:N](svm_correctness_serial == -1)
 
 % going one step ahead is fine as long as the time required for prediction and training
