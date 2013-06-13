@@ -116,9 +116,9 @@ disp('SVM failures for n = ')
 for n = max_K:N - 1
   for K = 2:max_K
     disp('n -- serial')
-    disp([num2str(n), '/', num2str(N - 1), ' = ', num2str(n/N), '%'])
+    disp([num2str(n), '/', num2str(N - 1), ' = ', num2str(n/N)*100, '%'])
     disp('K -- serial')
-    disp([num2str(K), '/', num2str(max_K), ' = ', num2str(K/max_K), '%'])
+    disp([num2str(K), '/', num2str(max_K), ' = ', num2str(K/max_K)*100, '%'])
     % XXX review ETA, since K and n have been swapped
     if(n >= max_K + 25)
       slope = 19/(mean(baseline_training_serial(K, n - 6:n)) - mean(baseline_training_serial(K, n - 25:n - 19)));
