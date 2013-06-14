@@ -48,8 +48,8 @@ function p = getNextObservedNeighbour(l, rho, K, I)
   nearest(1, 1) = rho(1, 1);
   nearest(1, 2) = Inf;
   for rho_idx = rho(:, 1)'
-    rho_base = dec2base(rho_idx - 1, K, I);
-    l_base = dec2base(l - 1, K, I);
+    rho_base = dec2base(uint64(rho_idx - 1), K, I);
+    l_base = dec2base(uint64(l - 1), K, I);
     dist = sum(double(rho_base == l_base));
     if(dist < nearest(1, 2))
       nearest(1, 1) = rho_idx;

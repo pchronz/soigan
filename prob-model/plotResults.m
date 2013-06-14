@@ -52,7 +52,7 @@ for K = 2:max_K
   % total rate
   % subplot(max_K - 1, 3, 3*(K - 2) + 1)
   subplot(max_K - 1, 1, K - 1)
-  plot([2:N], baseline_hit_rate(2, 2:end, 1), ';Total rate;', baseline_hit_rate(2, 2:end, 2), ';1-rate;', baseline_hit_rate(2, 2:end, 3), ';0-rate;');
+  plot([2:N], baseline_hit_rate(K, 2:end, 1), ';Total rate;', baseline_hit_rate(K, 2:end, 2), ';1-rate;', baseline_hit_rate(K, 2:end, 3), ';0-rate;');
   ylabel(['Baseline accuracy, K = ', num2str(K)]);
   %% 1-rate
   %subplot(max_K - 1, 3, 3*(K - 2) + 2)
@@ -69,7 +69,7 @@ ylabel('SVM accuracy');
 figure()
 for K = [2:max_K]
   subplot(max_K - 1, 1, K - 1)
-  plot([2:N], baseline_training_serial(2, 2:end), ';Learning time;');
+  plot([2:N], baseline_training_serial(K, 2:end), ';Learning time;');
   ylabel(['K = ', num2str(K)]);
 endfor
 % learning - SVM
@@ -81,7 +81,7 @@ plot([2:N], svm_training_serial(2:end), ';Learning time;');
 figure()
 for K = [2:max_K]
   subplot(max_K - 1, 1, K - 1)
-  plot([2:N], baseline_prediction_serial(2, 2:end), ';Prediction time;');
+  plot([2:N], baseline_prediction_serial(K, 2:end), ';Prediction time;');
   ylabel(['K = ', num2str(K)]);
 endfor
 % prediction - SVM
@@ -99,4 +99,18 @@ save baseline_prediction_serial.mat baseline_prediction_serial
 save svm_training_serial.mat svm_training_serial
 save svm_prediction_serial.mat svm_prediction_serial
 disp('The processed experimental results (serial) have been saved')
+
+% PARALLEL
+load experimentResultsParallel
+save baseline_accuracy.mat baseline_accuracy 
+save baseline_learning.mat baseline_learning 
+save baseline_prediction.mat baseline_prediction
+save prob_accuracy.mat prob_accuracy  
+save prob_learning.mat prob_learning  
+save prob_prediction.mat prob_prediction  
+save svm_accuracy.mat svm_accuracy  
+save svm_learning.mat svm_learning  
+save svm_prediction.mat svm_prediction
+disp('The processed experimental results (parallel) have been saved')
+
 

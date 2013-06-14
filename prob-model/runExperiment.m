@@ -33,7 +33,7 @@ X = rotdim(X, 1, [2, 3]);
 % the experimental parameters
 Delay = [0:0];
 It = 20;
-max_K = 5;
+max_K = 20;
 % the experimental results
 % accuracies
 baseline_accuracy = zeros(length(Delay), It, max_K);
@@ -49,7 +49,7 @@ prob_prediction = zeros(length(Delay), It, max_K);
 svm_prediction = zeros(length(Delay), It, max_K);
 
 % SERIAL EXPERIMENT
-[X, d] = loadEwsData();
+% [X, d] = loadEwsData();
 % [X, d] = loadGoeGridData();
 % [X, d] = loadHEPhyData();
 [X, d] = loadGoeGridFullData(0);
@@ -66,7 +66,8 @@ svm_training_serial = zeros(1, N);
 svm_prediction_serial = zeros(1, N);
 
 % SVM
-for n = 1:N - 1
+% XXX TODO DEBUG
+for n = 1:20%N - 1
   disp('SVM training and prediction')
   n
 
@@ -115,7 +116,7 @@ disp('SVM failures for n = ')
 % (via Cern) will be available and the time that we need to react and fix an error (MTTR).
 % baseline & prob model
 for n = max_K:N - 1
-  for K = 2:max_K
+  for K = 15:max_K
     disp('n -- serial')
     disp([num2str(n), '/', num2str(N - 1), ' = ', num2str(n/N)*100, '%'])
     disp('K -- serial')
