@@ -49,8 +49,8 @@ prob_prediction = zeros(length(Delay), It, max_K);
 svm_prediction = zeros(length(Delay), It, max_K);
 
 % SERIAL EXPERIMENT
-% [X, d] = loadEwsData();
-[X, d] = loadGoeGridData();
+[X, d] = loadEwsData();
+% [X, d] = loadGoeGridData();
 % [X, d] = loadHEPhyData();
 % [X, d] = loadGoeGridFullData(0);
 [D, I, N] = size(X);
@@ -180,8 +180,8 @@ for delay = Delay
     disp('Experiment iteration...')
     it
 
-    % [X, d] = loadEwsData();
-    [X, d] = loadGoeGridData();
+    [X, d] = loadEwsData();
+    % [X, d] = loadGoeGridData();
     % [X, d] = loadHEPhyData();
     % [X, d] = loadGoeGridFullData(delay);
     [D, I, N] = size(X);
