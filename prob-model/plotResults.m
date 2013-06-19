@@ -1,6 +1,8 @@
 % SERIAL
 load experimentResultsSerial
 [max_K, N] = size(baseline_correctness_serial);
+% determine how many entries have actually been computed
+N = max([1:N](logical(sum(baseline_correctness_serial))));
 % transform the prediction hits/misses into a rates incrementally
 % clustering-based
 % K x N x total rate/1-rate/0-rate
@@ -52,20 +54,23 @@ for K = 2:max_K
   % total rate
   % subplot(max_K - 1, 3, 3*(K - 2) + 1)
   subplot(max_K - 1, 1, K - 1)
-  plot([2:N], baseline_hit_rate(K, 2:end, 1), ';Total rate;', baseline_hit_rate(K, 2:end, 2), ';1-rate;', baseline_hit_rate(K, 2:end, 3), ';0-rate;');
+  plot([2:N], baseline_hit_rate(K, 2:N, 1), ';Total rate;', baseline_hit_rate(K, 2:N, 2), ';1-rate;', baseline_hit_rate(K, 2:N, 3), ';0-rate;');
   ylabel(['Baseline accuracy, K = ', num2str(K)]);
   %% 1-rate
   %subplot(max_K - 1, 3, 3*(K - 2) + 2)
-  %plot([2:N], baseline_hit_rate(2, 2:end, 2), ';1-rate;');
+  %plot([2:N], baseline_hit_rate(2, 2:N, 2), ';1-rate;');
   %% 0-rate
   %subplot(max_K - 1, 3, 3*(K - 2) + 3)
-  %plot([2:N], baseline_hit_rate(2, 2:end, 3), ';0-rate;');
+  %plot([2:N], baseline_hit_rate(2, 2:N, 3), ';0-rate;');
 endfor
 % hit rate - SVM
 figure()
-plot([2:N], svm_hit_rate(1, 2:end), ';Total rate;', svm_hit_rate(2, 2:end), ';1-rate;', svm_hit_rate(3, 2:end), ';0-rate;');
+plot([2:N], svm_hit_rate(1, 2:N), ';Total rate;', svm_hit_rate(2, 2:N), ';1-rate;', svm_hit_rate(3, 2:N), ';0-rate;');
 ylabel('SVM accuracy');
 % learning - baseline
+if(length(baseline_training_serial(K, :)) > N)
+  baseline_training_serial(:, N+1:end) = [];
+endif
 figure()
 for K = [2:max_K]
   subplot(max_K - 1, 1, K - 1)
@@ -73,22 +78,31 @@ for K = [2:max_K]
   ylabel(['K = ', num2str(K)]);
 endfor
 % learning - SVM
+if(length(svm_training_serial) > N)
+  svm_training_serial(N+1:end) = [];
+endif
 % set the "invalid" values to 0
 svm_training_serial(svm_training_serial == -1) = 0;
 figure()
-plot([2:N], svm_training_serial(2:end), ';Learning time;');
+plot([2:N], svm_training_serial(2:N), ';Learning time;');
 % prediction - baseline
+if(length(baseline_prediction_serial(K, :)) > N)
+  baseline_prediction_serial(:, N+1:end) = [];
+endif
 figure()
 for K = [2:max_K]
   subplot(max_K - 1, 1, K - 1)
-  plot([2:N], baseline_prediction_serial(K, 2:end), ';Prediction time;');
+  plot([2:N], baseline_prediction_serial(K, 2:N), ';Prediction time;');
   ylabel(['K = ', num2str(K)]);
 endfor
 % prediction - SVM
+if(length(svm_prediction_serial) > N)
+  svm_prediction_serial(N+1:end) = [];
+endif
 % set the "invalid" values to 0
 svm_prediction_serial(svm_prediction_serial == -1) = 0;
 figure()
-plot([2:N], svm_prediction_serial(2:end), ';Prediction time;');
+plot([2:N], svm_prediction_serial(2:N), ';Prediction time;');
 ylabel('SVM');
 
 % save the processed data for plotting it in R
