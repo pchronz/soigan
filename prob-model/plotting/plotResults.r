@@ -7,7 +7,7 @@ baseline_hit_rate_serial <- read.octave(paste("serial/", filename, ".mat", sep="
 baseline_hit_rate_serial <- baseline_hit_rate_serial[[1]]
 max_K = length(baseline_hit_rate_serial[, 1, 1])
 for(K in 2:max_K) {
-  pdf(file=paste(filename, "-K", K, ".pdf", sep=""))
+  pdf(file=paste(filename, "-K", K, ".pdf", sep=""), width=7, height=4)
   last <- length(baseline_hit_rate_serial[K, , 1])
   plot(2:last, baseline_hit_rate_serial[K, 2:last, 1], type="l", col="black", ylim=c(0, 1), xlab="Iteration", ylab="Hit rate", lty=1, lwd=2)
   lines(2:last, baseline_hit_rate_serial[K, 2:last, 2], type="l", col="blue", pch=22, lty=2, lwd=2)
@@ -18,7 +18,7 @@ for(K in 2:max_K) {
 }
 
 # plot total rates for various K for comparison
-pdf(file=paste(filename, "-K-comparison", ".pdf", sep=""))
+pdf(file=paste(filename, "-K-comparison", ".pdf", sep=""), width=7, height=4)
 last <- length(baseline_hit_rate_serial[2, , 1])
 plot(2:last, baseline_hit_rate_serial[2, 2:last, 1], type="l", col="black", ylim=c(0, 1), xlab="Iteration", ylab="Hit rate", lty=1, lwd=2)
 for(K in 3:max_K) {
@@ -36,7 +36,7 @@ max_K = length(baseline_training_serial[, 1])
 last <- length(baseline_training_serial[2, ])
 maxY <- max(baseline_training_serial)
 for(K in 2:max_K) {
-  pdf(file=paste(filename, "-K_", K, ".pdf", sep=""))
+  pdf(file=paste(filename, "-K_", K, ".pdf", sep=""), width=7, height=4)
   plot(2:last, baseline_training_serial[K, 2:last], ylim=c(0, maxY), type="l", col="black", xlab="Iteration", ylab="Training time [s]", lty=1, lwd=2)
   title(main=paste("Clustering training times, K = ", K), col.main="black", font.main=4)
   dev.off()
@@ -50,7 +50,7 @@ max_K = length(baseline_prediction_serial[, 1])
 last <- length(baseline_prediction_serial[2, ])
 maxY <- max(baseline_prediction_serial)
 for(K in 2:max_K) {
-  pdf(file=paste(filename, "-K_", K, ".pdf", sep=""))
+  pdf(file=paste(filename, "-K_", K, ".pdf", sep=""), width=7, height=4)
   plot(2:last, baseline_prediction_serial[K, 2:last], ylim=c(0, maxY), type="l", col="black", xlab="Iteration", ylab="Prediction time [s]", lty=1, lwd=2)
   title(main=paste("Clustering prediction times, K = ", K), col.main="black", font.main=4)
   dev.off()
@@ -60,7 +60,7 @@ for(K in 2:max_K) {
 filename <- "svm_hit_rate";
 svm_hit_rate <- read.octave(paste("serial/", filename, ".mat", sep=""))
 svm_hit_rate <- svm_hit_rate[[1]]
-pdf(file=paste(filename, ".pdf", sep=""))
+pdf(file=paste(filename, ".pdf", sep=""), width=7, height=4)
 last <- length(svm_hit_rate[1, ])
 plot(2:last, svm_hit_rate[1, 2:last], type="l", col="black", ylim=c(0, 1), xlab="Iteration", ylab="Hit rate", lty=1, lwd=2)
 lines(2:last, svm_hit_rate[2, 2:last], type="l", col="blue", pch=22, lty=2, lwd=2)
@@ -74,7 +74,7 @@ filename <- "svm_training_serial";
 svm_training_serial <- read.octave(paste("serial/", filename, ".mat", sep=""))
 svm_training_serial <- svm_training_serial[[1]]
 last <- length(svm_training_serial)
-pdf(file=paste(filename, ".pdf", sep=""))
+pdf(file=paste(filename, ".pdf", sep=""), width=7, height=4)
 plot(2:last, svm_training_serial[2:last], type="l", col="black", xlab="Iteration", ylab="Training time [s]", lty=1, lwd=2)
 title(main="SVM training times", col.main="black", font.main=4)
 dev.off()
@@ -84,7 +84,7 @@ filename <- "svm_prediction_serial";
 svm_prediction_serial <- read.octave(paste("serial/", filename, ".mat", sep=""))
 svm_prediction_serial <- svm_prediction_serial[[1]]
 last <- length(svm_prediction_serial)
-pdf(file=paste(filename, ".pdf", sep=""))
+pdf(file=paste(filename, ".pdf", sep=""), width=7, height=4)
 plot(2:last, svm_prediction_serial[2:last], type="l", col="black", xlab="Iteration", ylab="Prediction time [s]", lty=1, lwd=2)
 title(main="SVM prediction times", col.main="black", font.main=4)
 dev.off()
@@ -96,13 +96,14 @@ svm_hit_rate <- svm_hit_rate[[1]]
 filename <- "baseline_hit_rate_serial";
 baseline_hit_rate_serial <- read.octave(paste("serial/", filename, ".mat", sep=""))
 baseline_hit_rate_serial <- baseline_hit_rate_serial[[1]]
-pdf(file=paste("hit-rate-comparison", ".pdf", sep=""))
+pdf(file=paste("hit-rate-comparison", ".pdf", sep=""), width=7, height=4)
 last <- length(svm_hit_rate[1, ])
 plot(2:last, svm_hit_rate[1, 2:last], type="l", col="black", ylim=c(0, 1), xlab="Iteration", ylab="Hit rate", lty=1, lwd=2)
-last <- length(baseline_hit_rate_serial[2, , 1])
-lines(2:last, baseline_hit_rate_serial[2, 2:last, 1], type="l", col="blue", ylim=c(0, 1), lty=2, lwd=2)
+last <- length(baseline_hit_rate_serial[max_K, , 1])
+best_K <- which.max(baseline_hit_rate_serial[, last, 1])
+lines(2:last, baseline_hit_rate_serial[best_K, 2:last, 1], type="l", col="blue", ylim=c(0, 1), lty=2, lwd=2)
 title(main="Hit Rates Comparison", col.main="black", font.main=4)
-legend(x="bottomright", legend=c("SVM", "Clustering, K=2"), col=c("black", "blue"), lty=c(1:2), lwd=2)
+legend(x="bottomright", legend=c("SVM", paste("Clustering, K=", best_K)), col=c("black", "blue"), lty=c(1:2), lwd=2)
 dev.off()
 
 # SVM and clustering hit 0-rate comparison
@@ -112,13 +113,13 @@ svm_hit_rate <- svm_hit_rate[[1]]
 filename <- "baseline_hit_rate_serial";
 baseline_hit_rate_serial <- read.octave(paste("serial/", filename, ".mat", sep=""))
 baseline_hit_rate_serial <- baseline_hit_rate_serial[[1]]
-pdf(file=paste("hit-rate-comparison-0", ".pdf", sep=""))
+pdf(file=paste("hit-rate-comparison-0", ".pdf", sep=""), width=7, height=4)
 last <- length(svm_hit_rate[1, ])
 plot(2:last, svm_hit_rate[3, 2:last], type="l", col="black", ylim=c(0, 1), xlab="Iteration", ylab="Hit rate", lty=1, lwd=2)
-last <- length(baseline_hit_rate_serial[2, , 3])
-lines(2:last, baseline_hit_rate_serial[2, 2:last, 3], type="l", col="blue", ylim=c(0, 1), lty=2, lwd=2)
+last <- length(baseline_hit_rate_serial[best_K, , 3])
+lines(2:last, baseline_hit_rate_serial[best_K, 2:last, 3], type="l", col="blue", ylim=c(0, 1), lty=2, lwd=2)
 title(main="Hit Rates (0) Comparison", col.main="black", font.main=4)
-legend(x="bottomright", legend=c("SVM", "Clustering, K=2"), col=c("black", "blue"), lty=c(1:2), lwd=2)
+legend(x="bottomright", legend=c("SVM", paste("Clustering, K=", best_K)), col=c("black", "blue"), lty=c(1:2), lwd=2)
 dev.off()
 
 # SVM and clustering hit 1-rate comparison
@@ -128,13 +129,13 @@ svm_hit_rate <- svm_hit_rate[[1]]
 filename <- "baseline_hit_rate_serial";
 baseline_hit_rate_serial <- read.octave(paste("serial/", filename, ".mat", sep=""))
 baseline_hit_rate_serial <- baseline_hit_rate_serial[[1]]
-pdf(file=paste("hit-rate-comparison-1", ".pdf", sep=""))
+pdf(file=paste("hit-rate-comparison-1", ".pdf", sep=""), width=7, height=4)
 last <- length(svm_hit_rate[1, ])
-plot(2:last, svm_hit_rate[3, 2:last], type="l", col="black", ylim=c(0, 1), xlab="Iteration", ylab="Hit rate", lty=1, lwd=2)
-last <- length(baseline_hit_rate_serial[2, , 3])
-lines(2:last, baseline_hit_rate_serial[2, 2:last, 3], type="l", col="blue", ylim=c(0, 1), lty=2, lwd=2)
+plot(2:last, svm_hit_rate[2, 2:last], type="l", col="black", ylim=c(0, 1), xlab="Iteration", ylab="Hit rate", lty=1, lwd=2)
+last <- length(baseline_hit_rate_serial[best_K, , 3])
+lines(2:last, baseline_hit_rate_serial[best_K, 2:last, 2], type="l", col="blue", ylim=c(0, 1), lty=2, lwd=2)
 title(main="Hit Rates (1) Comparison", col.main="black", font.main=4)
-legend(x="bottomright", legend=c("SVM", "Clustering, K=2"), col=c("black", "blue"), lty=c(1:2), lwd=2)
+legend(x="bottomright", legend=c("SVM", paste("Clustering, K=", best_K)), col=c("black", "blue"), lty=c(1:2), lwd=2)
 dev.off()
 
 # baseline & SVM accuracy
@@ -146,7 +147,7 @@ svm_accuracy <- read.octave(paste("parallel/", filename, ".mat", sep=""))
 svm_accuracy <- svm_accuracy[[1]]
 last <- length(baseline_accuracy[1, , 1])
 max_K <- length(baseline_accuracy[1, 1, ])
-pdf(file=paste("accuracies", ".pdf", sep=""))
+pdf(file=paste("accuracies", ".pdf", sep=""), width=7, height=4)
 accuracies <- cbind(baseline_accuracy[1, 2:last, 2:max_K], svm_accuracy[1, 2:last, 2])
 names <- vector()
 for(K in 2:max_K) {
@@ -166,7 +167,7 @@ svm_learning <- read.octave(paste("parallel/", filename, ".mat", sep=""))
 svm_learning <- svm_learning[[1]]
 last <- length(baseline_learning[1, , 1])
 max_K <- length(baseline_learning[1, 1, ])
-pdf(file=paste("learning-durations", ".pdf", sep=""))
+pdf(file=paste("learning-durations", ".pdf", sep=""), width=7, height=4)
 accuracies <- cbind(baseline_learning[1, 2:last, 2:max_K], svm_learning[1, 2:last, 2])
 names <- vector()
 for(K in 2:max_K) {
@@ -186,7 +187,7 @@ svm_prediction <- read.octave(paste("parallel/", filename, ".mat", sep=""))
 svm_prediction <- svm_prediction[[1]]
 last <- length(baseline_prediction[1, , 1])
 max_K <- length(baseline_prediction[1, 1, ])
-pdf(file=paste("prediction-durations", ".pdf", sep=""))
+pdf(file=paste("prediction-durations", ".pdf", sep=""), width=7, height=4)
 accuracies <- cbind(baseline_prediction[1, 2:last, 2:max_K], svm_prediction[1, 2:last, 2])
 names <- vector()
 for(K in 2:max_K) {
