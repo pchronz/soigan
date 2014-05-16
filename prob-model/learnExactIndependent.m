@@ -170,8 +170,9 @@ function [mus, Sigmas, rho, pi] = learnExactIndependent(K, X, d, max_iter)
 
     % monitor for convergence
     % TODO consider evaluating the changes for each component individually and then require for each component to change a certain amount
+    % TODO try out Frobenius norm instead. I am currently not too sure what the p=2 norm really means. p=2 norm is the Euclidean norm.
     delta_mu = 1/(D * K * I) * norm(reshape(mus - mus_prev, D, K * I))
-    %delta_Sigma = 1/(D*(D-1)*K) * norm(sum(Sigmas - Sigmas_prev, 3))
+    %delta_Sigma = 1/(D*D*K*I) * norm(sum(Sigmas - Sigmas_prev))
     delta_pi = 1/(K * I) * norm(pi - pi_prev)
     delta_rho = 1/(K^I) * norm(rho - rho_prev)
     % XXX these values are chosen arbitrarily based on the assumption that the input vectors are scaled to be in [0, 1]

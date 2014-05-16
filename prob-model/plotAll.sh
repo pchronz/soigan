@@ -23,17 +23,17 @@ do
   mv svm_prediction_serial.mat plotting/serial/
   mv svm_training_serial.mat plotting/serial/
 
-  # parallel plots
-  if [ ! -d "plotting/parallel" ]; then
-    mkdir plotting/parallel
-  fi
-  rm plotting/parallel/*
-  mv baseline_accuracy.mat plotting/parallel
-  mv baseline_learning.mat plotting/parallel
-  mv baseline_prediction.mat plotting/parallel
-  mv svm_accuracy.mat plotting/parallel
-  mv svm_learning.mat plotting/parallel
-  mv svm_prediction.mat plotting/parallel
+  ## parallel plots
+  #if [ ! -d "plotting/parallel" ]; then
+  #  mkdir plotting/parallel
+  #fi
+  #rm plotting/parallel/*
+  #mv baseline_accuracy.mat plotting/parallel
+  #mv baseline_learning.mat plotting/parallel
+  #mv baseline_prediction.mat plotting/parallel
+  #mv svm_accuracy.mat plotting/parallel
+  #mv svm_learning.mat plotting/parallel
+  #mv svm_prediction.mat plotting/parallel
 
   cd plotting
   R --file=plotResults.r
