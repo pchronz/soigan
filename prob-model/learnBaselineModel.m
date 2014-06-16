@@ -47,7 +47,7 @@ function [Centers, rho] = learnBaselineModel(K, X, d)
   for l = L
     l_state = strbase2double(dec2base(uint64(l-1), K, I)) + 1;
     if(K < 10)
-      foo = str2double(dec2base(uint64(l-1), K, I))' + 1;
+      foo = str2double(dec2base(uint64(l-1), K, I)') + 1;
       assert(l_state == foo)
     endif
     l_observed = prod(states == l_state(:, ones(1, N)), 1);
