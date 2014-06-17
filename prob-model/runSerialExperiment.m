@@ -12,49 +12,49 @@ function [baseline_correctness_serial, baseline_training_serial, baseline_predic
   svm_training_serial = zeros(1, N);
   svm_prediction_serial = zeros(1, N);
 
-%  % SVM
-%  for n = 1:N - 1
-%    disp('SVM training and prediction')
-%    n
-%
-%    X_tr = X(:, :, 1:n);
-%    d_tr = d(1, 1:n);
-%    % learn SVM
-%    tic()
-%    MODE.TYPE='rbf';
-%    MODE.hyperparameter.c_value=rand(1)*250;
-%    MODE.hyperparameter.gamma=rand(1)/10000;
-%    if(sum(d_tr) > 0 && sum(!d_tr) > 0)
-%      [X_tr, d_tr] = balanceData(X_tr, d_tr);
-%    endif
-%    [D, I, N] = size(X_tr);
-%    CC = train_sc(reshape(X_tr, [D*I, N])', (d_tr + 1)', MODE);
-%    % XXX why does the SVM not work below a certain number of training vectors?
-%    % ==> cause it ain't got more than one class observed!
-%    elapsed = toc();
-%    if(CC.model.totalSV > 0)
-%      svm_training_serial(n) = elapsed;
-%      % predict SVM
-%      tic();
-%      [D, I, N_te] = size(X(:, :, n + 1));
-%      hits_svm = test_sc(CC, reshape(X(:, :, n + 1), [D*I, N_te])');
-%      hits_svm = hits_svm.classlabel - 1;
-%      hits_svm = sum(hits_svm == d(1, n + 1));
-%      elapsed = toc();
-%      svm_prediction_serial(n) = elapsed;
-%      assert(hits_svm == 0 || hits_svm == 1);
-%      svm_correctness_serial(n) = hits_svm;
-%    else
-%      % disp('SVM model failed at...')
-%      % n
-%      svm_training_serial(n) = -1;
-%      svm_correctness_serial(n) = -1;
-%      svm_prediction_serial(n) = -1;
-%    endif
-%  endfor
-%  disp('SVM failures for n = ')
-%  [D, I, N] = size(X);
-%  [1:N](svm_correctness_serial == -1)
+  % SVM
+  for n = 1:N - 1
+    disp('SVM training and prediction')
+    n
+
+    X_tr = X(:, :, 1:n);
+    d_tr = d(1, 1:n);
+    % learn SVM
+    tic()
+    MODE.TYPE='rbf';
+    MODE.hyperparameter.c_value=rand(1)*250;
+    MODE.hyperparameter.gamma=rand(1)/10000;
+    if(sum(d_tr) > 0 && sum(!d_tr) > 0)
+      [X_tr, d_tr] = balanceData(X_tr, d_tr);
+    endif
+    [D, I, N] = size(X_tr);
+    CC = train_sc(reshape(X_tr, [D*I, N])', (d_tr + 1)', MODE);
+    % XXX why does the SVM not work below a certain number of training vectors?
+    % ==> cause it ain't got more than one class observed!
+    elapsed = toc();
+    if(CC.model.totalSV > 0)
+      svm_training_serial(n) = elapsed;
+      % predict SVM
+      tic();
+      [D, I, N_te] = size(X(:, :, n + 1));
+      hits_svm = test_sc(CC, reshape(X(:, :, n + 1), [D*I, N_te])');
+      hits_svm = hits_svm.classlabel - 1;
+      hits_svm = sum(hits_svm == d(1, n + 1));
+      elapsed = toc();
+      svm_prediction_serial(n) = elapsed;
+      assert(hits_svm == 0 || hits_svm == 1);
+      svm_correctness_serial(n) = hits_svm;
+    else
+      % disp('SVM model failed at...')
+      % n
+      svm_training_serial(n) = -1;
+      svm_correctness_serial(n) = -1;
+      svm_prediction_serial(n) = -1;
+    endif
+  endfor
+  disp('SVM failures for n = ')
+  [D, I, N] = size(X);
+  [1:N](svm_correctness_serial == -1)
 
   % going one step ahead is fine as long as the time required for prediction and training
   % is less than the current time plus the time for which we wish to predict. Actually there
