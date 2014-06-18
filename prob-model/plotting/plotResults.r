@@ -91,69 +91,123 @@ plot(2:last, svm_prediction_serial[2:last], type="l", col="black", xlab="Iterati
 title(main="SVM prediction times", col.main="black", font.main=4)
 dev.off()
 
+# Bernoulli hit rate
+filename <- "bernoulli_hit_rate";
+bernoulli_hit_rate <- read.octave(paste("serial/", filename, ".mat", sep=""))
+bernoulli_hit_rate <- bernoulli_hit_rate[[1]]
+pdf(file=paste(filename, ".pdf", sep=""), width=7, height=4)
+last <- length(bernoulli_hit_rate[1, ])
+plot(2:last, bernoulli_hit_rate[1, 2:last], type="l", col="black", ylim=c(0, 1), xlab="Iteration", ylab="Hit rate", lty=1, lwd=2)
+lines(2:last, bernoulli_hit_rate[2, 2:last], type="l", col="blue", pch=22, lty=2, lwd=2)
+lines(2:last, bernoulli_hit_rate[3, 2:last], type="l", col="red", pch=22, lty=3, lwd=2)
+lines(2:last, bernoulli_hit_rate[4, 2:last], type="l", col="green", pch=22, lty=4, lwd=2)
+title(main="Bernoulli Quality", col.main="black", font.main=4)
+legend(x="bottomright", legend=c("Accuracy", "Precision", "Recall", "F-measure"), col=c("black", "blue", "red", "green"), lty=1:3, lwd=2)
+dev.off()
+
+# Bernoulli training times
+filename <- "bernoulli_training_serial";
+bernoulli_training_serial <- read.octave(paste("serial/", filename, ".mat", sep=""))
+bernoulli_training_serial <- bernoulli_training_serial[[1]]
+last <- length(bernoulli_training_serial)
+pdf(file=paste(filename, ".pdf", sep=""), width=7, height=4)
+plot(2:last, bernoulli_training_serial[2:last], type="l", col="black", xlab="Iteration", ylab="Training time [s]", lty=1, lwd=2)
+title(main="Bernoulli training times", col.main="black", font.main=4)
+dev.off()
+
+# Bernoulli prediction times
+filename <- "bernoulli_prediction_serial";
+bernoulli_prediction_serial <- read.octave(paste("serial/", filename, ".mat", sep=""))
+bernoulli_prediction_serial <- bernoulli_prediction_serial[[1]]
+last <- length(bernoulli_prediction_serial)
+pdf(file=paste(filename, ".pdf", sep=""), width=7, height=4)
+plot(2:last, bernoulli_prediction_serial[2:last], type="l", col="black", xlab="Iteration", ylab="Prediction time [s]", lty=1, lwd=2)
+title(main="Bernoulli prediction times", col.main="black", font.main=4)
+dev.off()
+
 # SVM and clustering accuracy comparison
 filename <- "svm_hit_rate";
 svm_hit_rate <- read.octave(paste("serial/", filename, ".mat", sep=""))
 svm_hit_rate <- svm_hit_rate[[1]]
+filename <- "bernoulli_hit_rate";
+bernoulli_hit_rate <- read.octave(paste("serial/", filename, ".mat", sep=""))
+bernoulli_hit_rate <- bernoulli_hit_rate[[1]]
 filename <- "baseline_hit_rate_serial";
 baseline_hit_rate_serial <- read.octave(paste("serial/", filename, ".mat", sep=""))
 baseline_hit_rate_serial <- baseline_hit_rate_serial[[1]]
 pdf(file=paste("accuracy-comparison", ".pdf", sep=""), width=7, height=4)
 last <- length(svm_hit_rate[1, ])
 plot(2:last, svm_hit_rate[1, 2:last], type="l", col="black", ylim=c(0, 1), xlab="Iteration", ylab="Accuracy", lty=1, lwd=2)
+last <- length(bernoulli_hit_rate[1, ])
+lines(2:last, bernoulli_hit_rate[1, 2:last], type="l", col="red", ylim=c(0, 1), lty=2, lwd=2)
 last <- length(baseline_hit_rate_serial[max_K, , 1])
 best_K <- which.max(baseline_hit_rate_serial[, last, 1])
-lines(2:last, baseline_hit_rate_serial[best_K, 2:last, 1], type="l", col="blue", ylim=c(0, 1), lty=2, lwd=2)
+lines(2:last, baseline_hit_rate_serial[best_K, 2:last, 1], type="l", col="blue", ylim=c(0, 1), lty=3, lwd=2)
 title(main="Accuracy Comparison", col.main="black", font.main=4)
-legend(x="bottomright", legend=c("SVM", paste("Clustering, K=", best_K)), col=c("black", "blue"), lty=c(1:2), lwd=2)
+legend(x="bottomright", legend=c("SVM", "Bernoulli", paste("Clustering, K=", best_K)), col=c("black", "red", "blue"), lty=c(1:3), lwd=2)
 dev.off()
 
 # SVM and clustering precision comparison
 filename <- "svm_hit_rate";
 svm_hit_rate <- read.octave(paste("serial/", filename, ".mat", sep=""))
 svm_hit_rate <- svm_hit_rate[[1]]
+filename <- "bernoulli_hit_rate";
+bernoulli_hit_rate <- read.octave(paste("serial/", filename, ".mat", sep=""))
+bernoulli_hit_rate <- bernoulli_hit_rate[[1]]
 filename <- "baseline_hit_rate_serial";
 baseline_hit_rate_serial <- read.octave(paste("serial/", filename, ".mat", sep=""))
 baseline_hit_rate_serial <- baseline_hit_rate_serial[[1]]
 pdf(file=paste("precision-comparison", ".pdf", sep=""), width=7, height=4)
 last <- length(svm_hit_rate[1, ])
 plot(2:last, svm_hit_rate[2, 2:last], type="l", col="black", ylim=c(0, 1), xlab="Iteration", ylab="Precision", lty=1, lwd=2)
+last <- length(bernoulli_hit_rate[1, ])
+lines(2:last, bernoulli_hit_rate[2, 2:last], type="l", col="red", ylim=c(0, 1), lty=2, lwd=2)
 last <- length(baseline_hit_rate_serial[best_K, , 3])
-lines(2:last, baseline_hit_rate_serial[best_K, 2:last, 2], type="l", col="blue", ylim=c(0, 1), lty=2, lwd=2)
+lines(2:last, baseline_hit_rate_serial[best_K, 2:last, 2], type="l", col="blue", ylim=c(0, 1), lty=3, lwd=2)
 title(main="Precision Comparison", col.main="black", font.main=4)
-legend(x="bottomright", legend=c("SVM", paste("Clustering, K=", best_K)), col=c("black", "blue"), lty=c(1:2), lwd=2)
+legend(x="bottomright", legend=c("SVM", "Bernoulli", paste("Clustering, K=", best_K)), col=c("black", "red", "blue"), lty=c(1:3), lwd=2)
 dev.off()
 
 # SVM and clustering recall comparison
 filename <- "svm_hit_rate";
 svm_hit_rate <- read.octave(paste("serial/", filename, ".mat", sep=""))
 svm_hit_rate <- svm_hit_rate[[1]]
+filename <- "bernoulli_hit_rate";
+bernoulli_hit_rate <- read.octave(paste("serial/", filename, ".mat", sep=""))
+bernoulli_hit_rate <- bernoulli_hit_rate[[1]]
 filename <- "baseline_hit_rate_serial";
 baseline_hit_rate_serial <- read.octave(paste("serial/", filename, ".mat", sep=""))
 baseline_hit_rate_serial <- baseline_hit_rate_serial[[1]]
 pdf(file=paste("recall-comparison", ".pdf", sep=""), width=7, height=4)
 last <- length(svm_hit_rate[1, ])
 plot(2:last, svm_hit_rate[3, 2:last], type="l", col="black", ylim=c(0, 1), xlab="Iteration", ylab="Recall", lty=1, lwd=2)
+last <- length(bernoulli_hit_rate[1, ])
+lines(2:last, bernoulli_hit_rate[3, 2:last], type="l", col="red", ylim=c(0, 1), lty=2, lwd=2)
 last <- length(baseline_hit_rate_serial[best_K, , 3])
-lines(2:last, baseline_hit_rate_serial[best_K, 2:last, 3], type="l", col="blue", ylim=c(0, 1), lty=2, lwd=2)
+lines(2:last, baseline_hit_rate_serial[best_K, 2:last, 3], type="l", col="blue", ylim=c(0, 1), lty=3, lwd=2)
 title(main="Recall Comparison", col.main="black", font.main=4)
-legend(x="bottomright", legend=c("SVM", paste("Clustering, K=", best_K)), col=c("black", "blue"), lty=c(1:2), lwd=2)
+legend(x="bottomright", legend=c("SVM", "Bernoulli", paste("Clustering, K=", best_K)), col=c("black", "red", "blue"), lty=c(1:3), lwd=2)
 dev.off()
 
 # SVM and clustering F-measure comparison
 filename <- "svm_hit_rate";
 svm_hit_rate <- read.octave(paste("serial/", filename, ".mat", sep=""))
 svm_hit_rate <- svm_hit_rate[[1]]
+filename <- "bernoulli_hit_rate";
+bernoulli_hit_rate <- read.octave(paste("serial/", filename, ".mat", sep=""))
+bernoulli_hit_rate <- bernoulli_hit_rate[[1]]
 filename <- "baseline_hit_rate_serial";
 baseline_hit_rate_serial <- read.octave(paste("serial/", filename, ".mat", sep=""))
 baseline_hit_rate_serial <- baseline_hit_rate_serial[[1]]
 pdf(file=paste("f-measure-comparison", ".pdf", sep=""), width=7, height=4)
 last <- length(svm_hit_rate[1, ])
 plot(2:last, svm_hit_rate[4, 2:last], type="l", col="black", ylim=c(0, 1), xlab="Iteration", ylab="F-measure", lty=1, lwd=2)
+last <- length(bernoulli_hit_rate[1, ])
+lines(2:last, bernoulli_hit_rate[4, 2:last], type="l", col="red", ylim=c(0, 1), lty=2, lwd=2)
 last <- length(baseline_hit_rate_serial[best_K, , 4])
-lines(2:last, baseline_hit_rate_serial[best_K, 2:last, 4], type="l", col="blue", ylim=c(0, 1), lty=2, lwd=2)
+lines(2:last, baseline_hit_rate_serial[best_K, 2:last, 4], type="l", col="blue", ylim=c(0, 1), lty=3, lwd=2)
 title(main="F-measure Comparison", col.main="black", font.main=4)
-legend(x="bottomright", legend=c("SVM", paste("Clustering, K=", best_K)), col=c("black", "blue"), lty=c(1:2), lwd=2)
+legend(x="bottomright", legend=c("SVM", "Bernoulli", paste("Clustering, K=", best_K)), col=c("black", "red", "blue"), lty=c(1:3), lwd=2)
 dev.off()
 
 # baseline & SVM accuracy

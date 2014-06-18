@@ -11,6 +11,25 @@ function [baseline_correctness_serial, baseline_training_serial, baseline_predic
   svm_correctness_serial = zeros(1, N);
   svm_training_serial = zeros(1, N);
   svm_prediction_serial = zeros(1, N);
+  bernoulli_correctness_serial = zeros(1, N);
+  bernoulli_training_serial = zeros(1, N);
+  bernoulli_prediction_serial = zeros(1, N);
+  
+  % Bernoulli (max likelihood)
+  for n = 2:N - 1
+      disp('Bernoulli model training --- serial')
+      tic()
+      % TODO Try out setting rho to 0.5, which someone might do naively.
+      rho = sum(d(1, 1:n))/N
+      elapsed = toc()
+      bernoulli_training_serial(1, n + 1) = elapsed;
+      disp('Bernoulli model prediction --- serial')
+      tic()
+      % Choose a random value and compare to rho.
+      bernoulli_correctness_serial(1, n + 1) = double(rand() > rho == d(n + 1))
+      elapsed = toc()
+      bernoulli_prediction_serial(1, n + 1) = elapsed;
+  endfor
 
   % SVM
   for n = 1:N - 1
@@ -80,6 +99,7 @@ function [baseline_correctness_serial, baseline_training_serial, baseline_predic
         ETA(5) = floor(mod(ETA(1), 60));
         disp(['ETA: ', num2str(ETA(2)), 'd ', num2str(ETA(3)), 'h ', num2str(ETA(4)), 'm ', num2str(ETA(5)), 's'])
       endif
+      % TODO What happens if we balance the data set first as for the SVM?
       X_tr = X(:, :, 1:n);
       d_tr = d(1, 1:n);
       disp('Baseline model training --- serial')
@@ -108,7 +128,7 @@ function [baseline_correctness_serial, baseline_training_serial, baseline_predic
       % prob_model_correctness_serial(K, n + 1) = double((p_0 < p_1) == d(n + 1));
 
       % better save than sorry
-      save experimentResultsSerial.mat d max_K baseline_correctness_serial baseline_training_serial baseline_prediction_serial prob_model_correctness_serial prob_model_training_serial prob_model_prediction_serial svm_correctness_serial svm_training_serial svm_prediction_serial
+      save experimentResultsSerial.mat d max_K baseline_correctness_serial baseline_training_serial baseline_prediction_serial prob_model_correctness_serial prob_model_training_serial prob_model_prediction_serial svm_correctness_serial svm_training_serial svm_prediction_serial bernoulli_correctness_serial bernoulli_training_serial bernoulli_prediction_serial
       disp('The serial results have been saved')
 
     endfor
@@ -123,4 +143,7 @@ function [baseline_correctness_serial, baseline_training_serial, baseline_predic
   svm_correctness_serial
   svm_training_serial
   svm_prediction_serial
+  bernoulli_correctness_serial
+  bernoulli_training_serial
+  bernoulli_prediction_serial
 endfunction

@@ -71,6 +71,35 @@ for n = 2:N
     svm_hit_rate(4, n) = 0;
   endif
 endfor
+% Bernoulli
+% total rate/precision/recall/F-measure
+bernoulli_hit_rate = zeros(4, N);
+for n = 2:N
+  % get the values that count at all
+  % count the hits
+  bernoulli_hits = bernoulli_correctness_serial(2:n);
+  % Accuracy
+  bernoulli_hit_rate(1, n) = sum(bernoulli_hits)/(n - 1);
+  % Precision
+  Z = sum(bernoulli_hits .* !d(2:n)) + sum(!bernoulli_hits(logical(d(2:n))));
+  if(Z > 0)
+    bernoulli_hit_rate(2, n) = sum(bernoulli_hits .* !d(2:n))/Z;
+  else
+    bernoulli_hit_rate(2, n) = 0;
+  endif
+  % Recall
+  Z = sum(bernoulli_hits .* !d(2:n)) + sum(!bernoulli_hits(logical(!d(2:n))));
+  if(Z > 0)
+    bernoulli_hit_rate(3, n) = sum(bernoulli_hits .* !d(2:n))/Z;
+  else
+    bernoulli_hit_rate(3, n) = 0;
+  endif
+  % F-measure
+  Z = bernoulli_hit_rate(2, n) + bernoulli_hit_rate(3, n);
+  if(Z > 0)
+    bernoulli_hit_rate(4, n) = 2*bernoulli_hit_rate(2, n)*bernoulli_hit_rate(3, n)/Z;
+  endif
+endfor
 % hit rate - baseline
 figure()
 for K = 2:max_K
@@ -90,6 +119,10 @@ endfor
 figure()
 plot([2:N], svm_hit_rate(1, 2:N), ';Accuracy;', svm_hit_rate(2, 2:N), ';Precision;', svm_hit_rate(3, 2:N), ';Recall;', svm_hit_rate(4, 2:N), ';F-measure;');
 ylabel('SVM accuracy');
+% hit rate - Bernoulli
+figure()
+plot([2:N], bernoulli_hit_rate(1, 2:N), ';Accuracy;', bernoulli_hit_rate(2, 2:N), ';Precision;', bernoulli_hit_rate(3, 2:N), ';Recall;', bernoulli_hit_rate(4, 2:N), ';F-measure;');
+ylabel('Bernoulli accuracy');
 % learning - baseline
 if(length(baseline_training_serial(K, :)) > N)
   baseline_training_serial(:, N+1:end) = [];
@@ -110,6 +143,14 @@ endif
 svm_training_serial(svm_training_serial == -1) = 0;
 figure()
 plot([2:N], svm_training_serial(2:N), ';Learning time;');
+ylabel('SVM');
+% learning - Bernoulli
+if(length(bernoulli_training_serial) > N)
+  bernoulli_training_serial(N+1:end) = [];
+endif
+figure()
+plot([2:N], bernoulli_training_serial(2:N), ';Learning time;');
+ylabel('Bernoulli');
 % prediction - baseline
 if(length(baseline_prediction_serial(K, :)) > N)
   baseline_prediction_serial(:, N+1:end) = [];
@@ -129,6 +170,13 @@ svm_prediction_serial(svm_prediction_serial == -1) = 0;
 figure()
 plot([2:N], svm_prediction_serial(2:N), ';Prediction time;');
 ylabel('SVM');
+% prediction - Bernoulli
+if(length(bernoulli_prediction_serial) > N)
+  bernoulli_prediction_serial(N+1:end) = [];
+endif
+figure()
+plot([2:N], bernoulli_prediction_serial(2:N), ';Prediction time;');
+ylabel('Bernoulli');
 
 % save the processed data for plotting it in R
 save baseline_hit_rate_serial.mat baseline_hit_rate 
@@ -137,6 +185,9 @@ save baseline_prediction_serial.mat baseline_prediction_serial
 save svm_hit_rate.mat svm_hit_rate
 save svm_training_serial.mat svm_training_serial
 save svm_prediction_serial.mat svm_prediction_serial
+save bernoulli_hit_rate.mat bernoulli_hit_rate
+save bernoulli_training_serial.mat bernoulli_training_serial
+save bernoulli_prediction_serial.mat bernoulli_prediction_serial
 disp('The processed experimental results (serial) have been saved')
 
 %% PARALLEL

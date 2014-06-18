@@ -17,7 +17,7 @@ min_K = 2;
 max_K = 5;
 
 % N, I, R, D, K
-[X, d] = createSyntheticData(250, 5, 3, 3, 3);
+[X, d] = createSyntheticData(25, 5, 3, 3, 3);
 % [X, d] = loadEwsData();
 % [X, d] = loadGoeGridData();
 % [X, d] = loadHEPhyData();

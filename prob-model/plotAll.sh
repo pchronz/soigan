@@ -22,6 +22,9 @@ do
   mv svm_hit_rate.mat plotting/serial/
   mv svm_prediction_serial.mat plotting/serial/
   mv svm_training_serial.mat plotting/serial/
+  mv bernoulli_hit_rate.mat plotting/serial/
+  mv bernoulli_prediction_serial.mat plotting/serial/
+  mv bernoulli_training_serial.mat plotting/serial/
 
   ## parallel plots
   #if [ ! -d "plotting/parallel" ]; then
