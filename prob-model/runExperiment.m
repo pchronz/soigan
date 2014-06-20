@@ -14,12 +14,12 @@ pkg load nan
 Delay = [0:0];
 It = 20;
 min_K = 2;
-max_K = 5;
+max_K = 2;
 
 % N, I, R, D, K
-[X, d] = createSyntheticData(25, 5, 3, 3, 3);
+% [X, d] = createSyntheticData(25, 5, 3, 3, 3);
 % [X, d] = loadEwsData();
-% [X, d] = loadGoeGridData();
+[X, d] = loadGoeGridData();
 % [X, d] = loadHEPhyData();
 % [X, d] = loadGoeGridFullData(0);
 

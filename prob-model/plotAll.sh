@@ -16,6 +16,9 @@ do
     mkdir plotting/serial
   fi
   rm plotting/serial/*
+  mv prob_model_hit_rate_serial.mat plotting/serial/
+  mv prob_model_prediction_serial.mat plotting/serial/
+  mv prob_model_training_serial.mat plotting/serial/
   mv baseline_hit_rate_serial.mat plotting/serial/
   mv baseline_prediction_serial.mat plotting/serial/
   mv baseline_training_serial.mat plotting/serial/
