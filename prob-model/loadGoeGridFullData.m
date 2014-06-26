@@ -31,6 +31,26 @@ function [X, d] = loadGoeGridFullData(delay)
   goe17 = goe(:, 115:120);
   goe18 = goe(:, 122:127);
   goe19 = goe(:, 129:134);
+  % Clean all the metrics
+  goe1 = cleanMetrics(goe1);
+  goe2 = cleanMetrics(goe2);
+  goe3 = cleanMetrics(goe3);
+  goe4 = cleanMetrics(goe4);
+  goe5 = cleanMetrics(goe5);
+  goe6 = cleanMetrics(goe6);
+  goe7 = cleanMetrics(goe7);
+  goe8 = cleanMetrics(goe8);
+  goe9 = cleanMetrics(goe9);
+  goe10 = cleanMetrics(goe10);
+  goe11 = cleanMetrics(goe11);
+  goe12 = cleanMetrics(goe12);
+  goe13 = cleanMetrics(goe13);
+  goe14 = cleanMetrics(goe14);
+  goe15 = cleanMetrics(goe15);
+  goe16 = cleanMetrics(goe16);
+  goe17 = cleanMetrics(goe17);
+  goe18 = cleanMetrics(goe18);
+  goe19 = cleanMetrics(goe19);
   % normalize the data sets
   goe1 = normalizeData(goe1);
   goe2 = normalizeData(goe2);
@@ -73,21 +93,9 @@ function [X, d] = loadGoeGridFullData(delay)
   X(:, 18, :) = goe18';
   X(:, 19, :) = goe19';
   d = goe(:, end)';
-endfunction
-
-function expanded = expandDataSet(X, D_X, N, D)
-    expanded = rand(N, D);
-    expanded(:, 1:D_X) = X;
-endfunction
-
-function normalized = normalizeData(X)
-  [N, D] = size(X);
-  s = var(X);
-  normalized = X(:, s > 0);
-  normalized = normalized - mean(normalized)(ones(1, N), :);
-  normalized = normalized * diag(1 ./ sqrt(var(normalized)));
-  assert(sum(abs(mean(normalized))) < 0.0001);
-  s2 = sum(var(normalized)) / size(normalized)(2);
-  assert(s2 < 1.0001 && s2 > 0.9999);
+  % Check for singular covariance matrices.
+  for i = 1:19
+    assert(isdefinite(cov(reshape(X(:, i, :), D, N)')) == 1)
+  end
 endfunction
 

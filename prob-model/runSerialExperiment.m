@@ -81,7 +81,7 @@ function [baseline_correctness_serial, baseline_training_serial, baseline_predic
   % (via Cern) will be available and the time that we need to react and fix an error (MTTR).
   % baseline & prob model
   % TODO find a nice solution for the min number of data points
-  for n = 25*max_K:N - 1
+  for n = 250*max_K:N - 1
     for K = min_K:max_K
       disp('n -- serial')
       disp([num2str(n), '/', num2str(N - 1), ' = ', num2str(n/N)*100, '%'])
@@ -103,18 +103,18 @@ function [baseline_correctness_serial, baseline_training_serial, baseline_predic
       % TODO What happens if we balance the data set first as for the SVM?
       X_tr = X(:, :, 1:n);
       d_tr = d(1, 1:n);
-      disp('Baseline model training --- serial')
-      tic()
-      [centers, rho_base] = learnBaselineModel(K, X_tr, d_tr);
-      elapsed = toc()
-      baseline_training_serial(K, n + 1) = elapsed;
-      % predict baseline
-      disp('Baseline model prediction --- serial')
-      tic()
-      [p_0, p_1] = predictBaseline(X(:, :, n + 1), centers, rho_base);
-      elapsed = toc()
-      baseline_prediction_serial(K, n + 1) = elapsed;
-      baseline_correctness_serial(K, n + 1) = double((p_0 < p_1) == d(n + 1));
+      %disp('Baseline model training --- serial')
+      %tic()
+      %[centers, rho_base] = learnBaselineModel(K, X_tr, d_tr);
+      %elapsed = toc()
+      %baseline_training_serial(K, n + 1) = elapsed;
+      %% predict baseline
+      %disp('Baseline model prediction --- serial')
+      %tic()
+      %[p_0, p_1] = predictBaseline(X(:, :, n + 1), centers, rho_base);
+      %elapsed = toc()
+      %baseline_prediction_serial(K, n + 1) = elapsed;
+      %baseline_correctness_serial(K, n + 1) = double((p_0 < p_1) == d(n + 1));
 
       disp('Multi-mixture model training --- serial')
       tic()

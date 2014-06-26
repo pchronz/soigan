@@ -17,6 +17,18 @@ function [X, d] = loadEwsData()
   localhost(all_nan_lines, :) = [];
   mysql(all_nan_lines, :) = [];
   ews(all_nan_lines, :) = [];
+  apache = cleanMetrics(apache);
+  jboss = cleanMetrics(jboss);
+  localhost = cleanMetrics(localhost);
+  mysql = cleanMetrics(mysql);
+  ews = cleanMetrics(ews);
+  % DEBUG
+  assert(isdefinite(cov(apache)) == 1);
+  assert(isdefinite(cov(jboss)) == 1);
+  assert(isdefinite(cov(localhost)) == 1);
+  assert(isdefinite(cov(mysql)) == 1);
+  assert(isdefinite(cov(ews)) == 1);
+
   apache = normalizeData(apache);
   jboss = normalizeData(jboss);
   localhost = normalizeData(localhost);
@@ -34,6 +46,13 @@ function [X, d] = loadEwsData()
   assert(N4 == max_N)
   assert(N5 == max_N)
   max_D = max([D1, D2, D3, D4, D5]);
+  % DEBUG
+  assert(isdefinite(cov(apache)) == 1);
+  assert(isdefinite(cov(jboss)) == 1);
+  assert(isdefinite(cov(localhost)) == 1);
+  assert(isdefinite(cov(mysql)) == 1);
+  assert(isdefinite(cov(ews)) == 1);
+
   X = zeros(max_D, 5, max_N);
   if(D1 < max_N)
     apache = expandDataSet(apache, D1, max_N, max_D);
@@ -50,6 +69,13 @@ function [X, d] = loadEwsData()
   if(D5 < max_N)
     ews = expandDataSet(ews, D5, max_N, max_D);
   endif
+  % DEBUG
+  assert(isdefinite(cov(apache)) == 1);
+  assert(isdefinite(cov(jboss)) == 1);
+  assert(isdefinite(cov(localhost)) == 1);
+  assert(isdefinite(cov(mysql)) == 1);
+  assert(isdefinite(cov(ews)) == 1);
+
   X(:, 1, :) = apache';
   X(:, 2, :) = jboss';
   X(:, 3, :) = localhost';
@@ -60,21 +86,9 @@ function [X, d] = loadEwsData()
   d(all_nan_lines) = [];
   Nd = size(d)(2);
   assert(Nd == max_N)
-endfunction
-
-function expanded = expandDataSet(X, D_X, N, D)
-    expanded = rand(N, D);
-    expanded(:, 1:D_X) = X;
-endfunction
-
-function normalized = normalizeData(X)
-  [N, D] = size(X);
-  s = var(X);
-  normalized = X(:, s > 0);
-  normalized = normalized - mean(normalized)(ones(1, N), :);
-  normalized = normalized * diag(1 ./ sqrt(var(normalized)));
-  assert(sum(abs(mean(normalized))) < 0.0001);
-  s2 = sum(var(normalized)) / size(normalized)(2);
-  assert(s2 < 1.0001 && s2 > 0.9999);
+  % Check for singular covariance matrices.
+  for i = 1:5
+    assert(isdefinite(cov(reshape(X(:, i, :), max_D, Nd)')) == 1)
+  end
 endfunction
 

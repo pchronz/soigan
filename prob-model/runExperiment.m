@@ -18,10 +18,10 @@ max_K = 2;
 
 % N, I, R, D, K
 % [X, d] = createSyntheticData(25, 5, 3, 3, 3);
-% [X, d] = loadEwsData();
-[X, d] = loadGoeGridData();
+ [X, d] = loadEwsData();
+% [X, d] = loadGoeGridData();
 % [X, d] = loadHEPhyData();
-% [X, d] = loadGoeGridFullData(0);
+%[X, d] = loadGoeGridFullData(0);
 
 disp(sum(d == 0))
 disp(sum(d == 1))
