@@ -16,12 +16,22 @@ It = 20;
 min_K = 2;
 max_K = 2;
 
-% N, I, R, D, K
-% [X, d] = createSyntheticData(25, 5, 3, 3, 3);
- [X, d] = loadEwsData();
-% [X, d] = loadGoeGridData();
-% [X, d] = loadHEPhyData();
-%[X, d] = loadGoeGridFullData(0);
+det = true;
+X = 0;
+d = 0;
+if(det)
+  disp('Using previously used data set.')
+  load('detdata.mat');
+else
+  disp('Preparing data set from scratch.')
+  % N, I, R, D, K
+  % [X, d] = createSyntheticData(25, 5, 3, 3, 3);
+   [X, d] = loadEwsData();
+  % [X, d] = loadGoeGridData();
+  % [X, d] = loadHEPhyData();
+  %[X, d] = loadGoeGridFullData(0);
+  save detdata.mat X d
+endif
 
 disp(sum(d == 0))
 disp(sum(d == 1))

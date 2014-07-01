@@ -1,39 +1,5 @@
 % SERIAL
 load experimentResultsSerial
-% Prob model
-[max_K, N] = size(prob_model_correctness_serial);
-% determine how many entries have actually been computed
-N = max([1:N](logical(sum(prob_model_correctness_serial))));
-% transform the prediction hits/misses into a rates incrementally
-% clustering-based
-% K x N x accuracy/precision/recall/F-measure
-prob_model_hit_rate = zeros(max_K, N, 4);
-for K = [2:max_K]
-  for n = 2:N
-    % Accuracy
-    prob_model_hit_rate(K, n, 1) = sum(prob_model_correctness_serial(K, 2:n))/(n - 1);
-    % Precision
-    Z = sum(prob_model_correctness_serial(K, ~logical(d(2:n)))) + sum(!prob_model_correctness_serial(K, logical(d(2:n))));
-    if(Z > 0)
-      prob_model_hit_rate(K, n, 2) = sum(prob_model_correctness_serial(K, ~logical(d(2:n)))) / Z;
-    else
-      prob_model_hit_rate(K, n, 2) = 0;
-    endif
-    % Recall
-    if(sum(!d(2:n)) > 0)
-      prob_model_hit_rate(K, n, 3) = sum(prob_model_correctness_serial(K, ~logical(d(2:n)))) / sum(!d(2:n));
-    else
-      prob_model_hit_rate(K, n, 3) = 0;
-    endif
-    % F-measure
-    Z = prob_model_hit_rate(K, n, 2) + prob_model_hit_rate(K, n, 3);
-    if(Z > 0)
-      prob_model_hit_rate(K, n, 4) = 2*prob_model_hit_rate(K, n, 2)*prob_model_hit_rate(K, n, 3)/Z;
-    else
-      prob_model_hit_rate(K, n, 4) = 0;
-    endif
-  endfor
-endfor
 % Baseline
 [max_K, N] = size(baseline_correctness_serial);
 % determine how many entries have actually been computed
@@ -65,6 +31,40 @@ for K = [2:max_K]
       baseline_hit_rate(K, n, 4) = 2*baseline_hit_rate(K, n, 2)*baseline_hit_rate(K, n, 3)/Z;
     else
       baseline_hit_rate(K, n, 4) = 0;
+    endif
+  endfor
+endfor
+% Prob model
+[max_K, N] = size(prob_model_correctness_serial);
+% determine how many entries have actually been computed
+N = max([1:N](logical(sum(prob_model_correctness_serial))));
+% transform the prediction hits/misses into a rates incrementally
+% clustering-based
+% K x N x accuracy/precision/recall/F-measure
+prob_model_hit_rate = zeros(max_K, N, 4);
+for K = [2:max_K]
+  for n = 2:N
+    % Accuracy
+    prob_model_hit_rate(K, n, 1) = sum(prob_model_correctness_serial(K, 2:n))/(n - 1);
+    % Precision
+    Z = sum(prob_model_correctness_serial(K, ~logical(d(2:n)))) + sum(!prob_model_correctness_serial(K, logical(d(2:n))));
+    if(Z > 0)
+      prob_model_hit_rate(K, n, 2) = sum(prob_model_correctness_serial(K, ~logical(d(2:n)))) / Z;
+    else
+      prob_model_hit_rate(K, n, 2) = 0;
+    endif
+    % Recall
+    if(sum(!d(2:n)) > 0)
+      prob_model_hit_rate(K, n, 3) = sum(prob_model_correctness_serial(K, ~logical(d(2:n)))) / sum(!d(2:n));
+    else
+      prob_model_hit_rate(K, n, 3) = 0;
+    endif
+    % F-measure
+    Z = prob_model_hit_rate(K, n, 2) + prob_model_hit_rate(K, n, 3);
+    if(Z > 0)
+      prob_model_hit_rate(K, n, 4) = 2*prob_model_hit_rate(K, n, 2)*prob_model_hit_rate(K, n, 3)/Z;
+    else
+      prob_model_hit_rate(K, n, 4) = 0;
     endif
   endfor
 endfor
@@ -182,6 +182,7 @@ for K = [2:max_K]
   subplot(max_K - 1, 1, K - 1)
   size(prob_model_training_serial(K, 2:end))
   [2:N]
+  N
   plot([2:N], prob_model_training_serial(K, 2:end), ';Learning time;');
   ylabel(['K = ', num2str(K)]);
 endfor

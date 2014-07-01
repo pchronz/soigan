@@ -80,8 +80,8 @@ function [baseline_correctness_serial, baseline_training_serial, baseline_predic
   % we also need to count in a slack that is the time until which the observed global value
   % (via Cern) will be available and the time that we need to react and fix an error (MTTR).
   % baseline & prob model
-  % TODO find a nice solution for the min number of data points
-  for n = 250*max_K:N - 1
+  %for n = max_K:N - 1
+  for n = 11:N - 1
     for K = min_K:max_K
       disp('n -- serial')
       disp([num2str(n), '/', num2str(N - 1), ' = ', num2str(n/N)*100, '%'])
@@ -127,6 +127,9 @@ function [baseline_correctness_serial, baseline_training_serial, baseline_predic
       elapsed = toc()
       prob_model_prediction_serial(K, n + 1) = elapsed;
       prob_model_correctness_serial(K, n + 1) = double((p_0 < p_1) == d(n + 1));
+      prob_model_correctness_serial(K, 1:n + 1)
+      p_0
+      p_1
 
       % better save than sorry
       save experimentResultsSerial.mat d max_K baseline_correctness_serial baseline_training_serial baseline_prediction_serial prob_model_correctness_serial prob_model_training_serial prob_model_prediction_serial svm_correctness_serial svm_training_serial svm_prediction_serial bernoulli_correctness_serial bernoulli_training_serial bernoulli_prediction_serial

@@ -29,9 +29,16 @@ function [mus, Sigmas, rho, pi] = learnExactIndependent(K, X, d, max_iter)
     % compute the intra-cluster covariance and use it to initialize the component covariance
     i
     for k = 1:K
-      Sigmas(:, :, k, i) = cov(X_i(:, idx' == k)');
+      % We need at least two observations to compute the sample covariance.
+      % Otherwise just, stay with the isotropic unit-variance.
+      if(sum(idx == k) >= 2)
+        Sigmas(:, :, k, i) = cov(X_i(:, idx' == k)');
+      endif
     endfor
   endfor
+
+  % Handle singular covariance matrices.
+  Sigmas = replaceSingularCovariance(Sigmas);
 
   % keep a copy of the previous model params to monitor the progress
   mus_prev = mus;
@@ -53,57 +60,6 @@ function [mus, Sigmas, rho, pi] = learnExactIndependent(K, X, d, max_iter)
     pi_prev = pi;
     rho_prev = rho;
 
-    % Cope with singularities.
-    % If one of the components has a singular covariance matrix, sample a value from the component with an isotropic covariance in the order of the smalles covariance from all other components.
-    % Determine singular components
-    for i = 1:I
-      for k = 1:K
-        Sigma_ki = Sigmas(:, :, k, i);
-        % Is Sigma_ki positive definite?
-        if(isdefinite(Sigma_ki) != 1)
-          disp('Discovered a covariance matrix that is not positive definite.')
-          k
-          i
-          % Compute the parameter for the isotropic Gaussian that minimises D_KL(p||q), based on the Gaussians for the same service i.
-          %alphas = inf(1, K);
-          %for k2 = 1:K
-          %  if (k2 == k)
-          %    continue
-          %  endif
-          %  % TODO Try to compute the parameters by minimising D_KL(q||p) instead, if you can solve the integral. Minimizing D_KL(q||p) should result in a larger variance, while minimizing D_KL(p||q) should keep it quite small. 
-          %  alphas(1, k2) = 1/D*trace(Sigmas(:, :, k2, i));
-          %end
-          %alpha = min(alphas);
-          % XXX Do something more meaningful, such as the above.
-          % Set the component's covariance to the isotropic covariance.
-          Sigmas(:, :, k, i) = eye(D);
-          % Sample a value from a multi-variate Gaussian with mu_ki and alpha.
-          x_new = mvnrnd(mus(:, k, i)', Sigmas(:, :, k, i));
-          % Find out on which observation the component centers on.
-          dists = zeros(1, N);
-          for n = 1:N
-            % What is the distance between the mean and each value?
-            dists(1, n) = sqrt((mus(:, k, i) - X(:, i, n))'*(mus(:, k, i) - X(:, i, n)));
-          end
-          [dist, n_sing] = min(dists);
-          % TODO retry removing singular observations instead of sampling more
-          % Copy the values of the non-singular components for the same timeframe.
-          X_new = X(:, :, n_sing);
-          % Replace the observed value for the singular component, with the sampled value.
-          X_new(:, i) = x_new;
-          % Add the generated observation for all services to the data set.
-          X(:, :, end + 1) = X_new;
-          % Add the global state data to it.
-          d(end + 1) = d(n_sing);
-          % Update the data set's size
-          [D, I, N] = size(X);
-          % Restart the optimization.
-          it = 0;
-        endif
-      end
-    end
-    
-
     % E-step
     % compute the posterior for all possible states for Z for all observations N
     % this results in a matrix with (K^I)*N entries, you might want to optimize this at some point
@@ -112,6 +68,7 @@ function [mus, Sigmas, rho, pi] = learnExactIndependent(K, X, d, max_iter)
     disp('E-step tic');
     tic()
     p_Z = computePosterior(mus, Sigmas, pi, rho, X, d, K);
+    p_Z = e.^(log(p_Z) .- log(sum(p_Z)));
     if(sum(sum(isnan(p_Z))) != 0)
       p_Z
       Sigmas
@@ -120,6 +77,16 @@ function [mus, Sigmas, rho, pi] = learnExactIndependent(K, X, d, max_iter)
       pi
     endif
     assert(sum(sum(isnan(p_Z))) == 0)
+    sum_p_Z = sum(p_Z);
+    % Test whether the probabilities over the latent variables approximately sum to 1.
+    fo1 = sum(sum(p_Z) >= 1.0001);
+    fo2 = sum(sum(p_Z) < 0.9999);
+    if(fo1 != 0 || fo2 != 0)
+      p_Z
+      fo1
+      fo2
+    endif
+    assert(fo1 == 0 && fo2 == 0)
     toc()
     %tic()
     %p_Z = zeros(K^I, N);
@@ -154,11 +121,29 @@ function [mus, Sigmas, rho, pi] = learnExactIndependent(K, X, d, max_iter)
     %  endfor
     %endfor
     %% normalize
-    %p_Z = p_Z ./ sum(p_Z);
-    %sum(sum(abs(p_Z - p_Z_fast)))
-    %assert(sum(sum(abs(p_Z - p_Z_fast))) < 0.0001)
-    %disp('E-step toc')
-    %toc()
+    %%p_Z = p_Z ./ sum(p_Z);
+    %p_Z = e.^(log(p_Z) .- log(sum(p_Z)));
+    % DEBUG
+    if(sum(sum(isnan(p_Z))) != 0)
+      p_Z
+      Sigmas
+      mus
+      rho
+      pi
+    endif
+    assert(sum(sum(isnan(p_Z))) == 0)
+    sum_p_Z = sum(p_Z);
+    % Test whether the probabilities over the latent variables approximately sum to 1.
+    fo1 = sum(sum(p_Z) >= 1.0001);
+    fo2 = sum(sum(p_Z) < 0.9999);
+    if(fo1 != 0 || fo2 != 0)
+      p_Z
+      fo1
+      fo2
+    endif
+    assert(fo1 == 0 && fo2 == 0)
+    disp('E-step toc')
+    toc()
 
     % M-step
     disp('M-step rho')
@@ -168,11 +153,13 @@ function [mus, Sigmas, rho, pi] = learnExactIndependent(K, X, d, max_iter)
       rho(l) = p_Z(l, :) * d';
     endfor
     sum_p_Z = sum(p_Z, 2);
-    
-    % Test whether the probabilities over the latent variables approximately sum to 1.
-    assert(sum(sum(p_Z) >= 1.0001) == 0 && sum(sum(p_Z) < 0.9999) == 0)
     rho = rho ./ sum_p_Z;
     % Test whether all rho values are ok.
+    if(sum(isnan(rho)) != 0)
+      p_Z
+      d'
+      rho
+    endif
     assert(sum(isnan(rho)) == 0)
     toc()
     % pi, mus
@@ -237,6 +224,9 @@ function [mus, Sigmas, rho, pi] = learnExactIndependent(K, X, d, max_iter)
     Sigmas
     pi
 
+    % Handle singular covariance matrices.
+    Sigmas = replaceSingularCovariance(Sigmas);
+
     % monitor for convergence
     % TODO consider evaluating the changes for each component individually and then require for each component to change a certain amount
     % TODO try out Frobenius norm instead. I am currently not too sure what the p=2 norm really means. p=2 norm is the Euclidean norm.
@@ -253,6 +243,62 @@ function [mus, Sigmas, rho, pi] = learnExactIndependent(K, X, d, max_iter)
   endfor
 endfunction
 
+function S = replaceSingularCovariance(Sigmas)
+    [D, D, K, I] = size(Sigmas);
+    % Determine singular components
+    for i = 1:I
+      for k = 1:K
+        Sigma_ki = Sigmas(:, :, k, i);
+        % XXX Why is Sigma_ki sometimes not hermitian?
+        if(!ishermitian(Sigma_ki))
+          Sigma_ki
+          k
+          i
+        end
+        % Is Sigma_ki positive definite?
+        if(isdefinite(Sigma_ki) != 1)
+          disp('Discovered a covariance matrix that is not positive definite.')
+          k
+          i
+          % Compute the parameter for the isotropic Gaussian that minimises D_KL(p||q), based on the Gaussians for the same service i.
+          %alphas = inf(1, K);
+          %for k2 = 1:K
+          %  if (k2 == k)
+          %    continue
+          %  endif
+          %  % TODO Try to compute the parameters by minimising D_KL(q||p) instead, if you can solve the integral. Minimizing D_KL(q||p) should result in a larger variance, while minimizing D_KL(p||q) should keep it quite small. 
+          %  alphas(1, k2) = 1/D*trace(Sigmas(:, :, k2, i));
+          %end
+          %alpha = min(alphas);
+          % Set the component's covariance to the isotropic covariance.
+          % Using a relatively small value for the covariance, which depends on machine precision.
+          %Sigmas(:, :, k, i) = 4*eps^(2/N*D)*eye(D);
+          Sigmas(:, :, k, i) = eye(D);
+          %% Sample a value from a multi-variate Gaussian with mu_ki and alpha.
+          %x_new = mvnrnd(mus(:, k, i)', Sigmas(:, :, k, i));
+          %% Find out on which observation the component centers on.
+          %dists = zeros(1, N);
+          %for n = 1:N
+          %  % What is the distance between the mean and each value?
+          %  dists(1, n) = sqrt((mus(:, k, i) - X(:, i, n))'*(mus(:, k, i) - X(:, i, n)));
+          %end
+          %[dist, n_sing] = min(dists);
+          %% TODO retry removing singular observations instead of sampling more
+          %% Copy the values of the non-singular components for the same timeframe.
+          %X_new = X(:, :, n_sing);
+          %% Replace the observed value for the singular component, with the sampled value.
+          %X_new(:, i) = x_new;
+          %% Add the generated observation for all services to the data set.
+          %X(:, :, end + 1) = X_new;
+          %% Add the global state data to it.
+          %d(end + 1) = d(n_sing);
+          %% Update the data set's size
+          %[D, I, N] = size(X);
+        endif
+      end
+    end
+    S = Sigmas;
+endfunction
 
 
 

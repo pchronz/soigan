@@ -108,7 +108,7 @@ DEFUN_DLD (computePosterior, args, nargout, "") {
       }
     }
   }
-  p_Z = p_Z * p_Z.sum().diag().inverse();
+  //p_Z = p_Z * p_Z.sum().diag().inverse();
   // return
   octave_value_list retval(1);
   retval(0) = p_Z;
