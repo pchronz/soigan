@@ -180,10 +180,7 @@ endif
 figure()
 for K = [2:max_K]
   subplot(max_K - 1, 1, K - 1)
-  size(prob_model_training_serial(K, 2:end))
-  [2:N]
-  N
-  plot([2:N], prob_model_training_serial(K, 2:end), ';Learning time;');
+  plot([2:N], prob_model_training_serial(K, 2:N), ';Learning time;');
   ylabel(['K = ', num2str(K)]);
 endfor
 % learning - baseline
@@ -193,9 +190,7 @@ endif
 figure()
 for K = [2:max_K]
   subplot(max_K - 1, 1, K - 1)
-  size(baseline_training_serial(K, 2:end))
-  [2:N]
-  plot([2:N], baseline_training_serial(K, 2:end), ';Learning time;');
+  plot([2:N], baseline_training_serial(K, 2:N), ';Learning time;');
   ylabel(['K = ', num2str(K)]);
 endfor
 % learning - SVM

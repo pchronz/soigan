@@ -81,7 +81,7 @@ function [baseline_correctness_serial, baseline_training_serial, baseline_predic
   % (via Cern) will be available and the time that we need to react and fix an error (MTTR).
   % baseline & prob model
   %for n = max_K:N - 1
-  for n = 11:N - 1
+  for n = 123:N - 1
     for K = min_K:max_K
       disp('n -- serial')
       disp([num2str(n), '/', num2str(N - 1), ' = ', num2str(n/N)*100, '%'])

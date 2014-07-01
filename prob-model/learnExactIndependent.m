@@ -249,12 +249,14 @@ function S = replaceSingularCovariance(Sigmas)
     for i = 1:I
       for k = 1:K
         Sigma_ki = Sigmas(:, :, k, i);
-        % XXX Why is Sigma_ki sometimes not hermitian?
-        if(!ishermitian(Sigma_ki))
+        % Sometimes numerical instabilities lead to non-symmetric covariance matrices.
+        if(!issymmetric(Sigma_ki, eps))
+          save temp.mat Sigma_ki
           Sigma_ki
           k
           i
         end
+        assert(issymmetric(Sigma_ki, eps))
         % Is Sigma_ki positive definite?
         if(isdefinite(Sigma_ki) != 1)
           disp('Discovered a covariance matrix that is not positive definite.')
