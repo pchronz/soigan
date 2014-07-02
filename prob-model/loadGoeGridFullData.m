@@ -1,6 +1,8 @@
-function [X, d] = loadGoeGridFullData(delay)
+function [X, d] = loadGoeGridFullData(delay, max_n)
   goe = dlmread('data/goegrid/goegrid.csv', ',', 1, 1);
   [N, foo] = size(goe);
+  N = max(N, max_N);
+  goe = goe(1:N, :);
   % re-align the monitoring values with the targets
   Idx = 1:N;
   d_start = Idx(logical(goe(:, end)))(1);

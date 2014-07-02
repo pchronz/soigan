@@ -1,4 +1,5 @@
 #include <octave/oct.h>
+#include <iostream>
 #include "math.h"
 #include "dec2oneOfK.cc"
 #include "base2decpure.cc"

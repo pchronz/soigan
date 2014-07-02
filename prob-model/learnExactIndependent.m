@@ -49,9 +49,6 @@ function [mus, Sigmas, rho, pi] = learnExactIndependent(K, X, d, max_iter)
   disp('Init toc')
   toc()
 
-  % TODO compute one 3D matrix of all states of Z: KxIxK^I
-  % this can then be used many times to use vector operations instead of loops
-
   for it = 1:max_iter
     it
     % save the current values before updating the params in this iteration
@@ -67,7 +64,9 @@ function [mus, Sigmas, rho, pi] = learnExactIndependent(K, X, d, max_iter)
     % let's get it over with...
     disp('E-step tic');
     tic()
+    disp('Computing posterior...')
     p_Z = computePosterior(mus, Sigmas, pi, rho, X, d, K);
+    disp('Normalizing...')
     p_Z = e.^(log(p_Z) .- log(sum(p_Z)));
     if(sum(sum(isnan(p_Z))) != 0)
       p_Z
@@ -218,11 +217,6 @@ function [mus, Sigmas, rho, pi] = learnExactIndependent(K, X, d, max_iter)
     %endfor
     %toc()
     %assert(sum(sum(sum(sum(abs(Sigmas - Sigmas_fast))))) < 0.0001)
-
-    rho
-    mus
-    Sigmas
-    pi
 
     % Handle singular covariance matrices.
     Sigmas = replaceSingularCovariance(Sigmas);

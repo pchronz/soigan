@@ -1,4 +1,4 @@
-function [X, d] = loadEwsData()
+function [X, d] = loadEwsData(N)
   apache = dlmread('data/ews/apache.csv', ';', 1, 1);
   % remove all rows with NaNs throughout all data sets
   apache_nan_lines = sum(isnan(apache), 2) > 0;
@@ -17,6 +17,27 @@ function [X, d] = loadEwsData()
   localhost(all_nan_lines, :) = [];
   mysql(all_nan_lines, :) = [];
   ews(all_nan_lines, :) = [];
+  % Make sure that we use only max_N values.
+  [N1, D1] = size(apache);
+  [N2, D2] = size(jboss);
+  [N3, D3] = size(localhost);
+  [N4, D4] = size(mysql);
+  [N5, D5] = size(ews);
+  max_N = max([N1, N2, N3, N4, N5]);
+  assert(N1 == max_N)
+  assert(N2 == max_N)
+  assert(N3 == max_N)
+  assert(N4 == max_N)
+  assert(N5 == max_N)
+  if(N < max_N)
+    apache = apache(1:N, :);
+    jboss = jboss(1:N, :);
+    localhost = localhost(1:N, :);
+    mysql = mysql(1:N, :);
+    ews = ews(1:N, :);
+  endif
+
+  % Remove colinear dimensions.
   apache = cleanMetrics(apache);
   jboss = cleanMetrics(jboss);
   localhost = cleanMetrics(localhost);
@@ -34,17 +55,12 @@ function [X, d] = loadEwsData()
   localhost = normalizeData(localhost);
   mysql = normalizeData(mysql);
   ews = normalizeData(ews);
+
   [N1, D1] = size(apache);
   [N2, D2] = size(jboss);
   [N3, D3] = size(localhost);
   [N4, D4] = size(mysql);
   [N5, D5] = size(ews);
-  max_N = max([N1, N2, N3, N4, N5]);
-  assert(N1 == max_N)
-  assert(N2 == max_N)
-  assert(N3 == max_N)
-  assert(N4 == max_N)
-  assert(N5 == max_N)
   max_D = max([D1, D2, D3, D4, D5]);
   % DEBUG
   assert(isdefinite(cov(apache)) == 1);
@@ -53,21 +69,21 @@ function [X, d] = loadEwsData()
   assert(isdefinite(cov(mysql)) == 1);
   assert(isdefinite(cov(ews)) == 1);
 
-  X = zeros(max_D, 5, max_N);
-  if(D1 < max_N)
-    apache = expandDataSet(apache, D1, max_N, max_D);
+  X = zeros(max_D, 5, N);
+  if(D1 < max_D)
+    apache = expandDataSet(apache, D1, N, max_D);
   endif
-  if(D2 < max_N)
-    jboss = expandDataSet(jboss, D2, max_N, max_D);
+  if(D2 < max_D)
+    jboss = expandDataSet(jboss, D2, N, max_D);
   endif
-  if(D3 < max_N)
-    localhost = expandDataSet(localhost, D3, max_N, max_D);
+  if(D3 < max_D)
+    localhost = expandDataSet(localhost, D3, N, max_D);
   endif
-  if(D4 < max_N)
-    mysql = expandDataSet(mysql, D4, max_N, max_D);
+  if(D4 < max_D)
+    mysql = expandDataSet(mysql, D4, N, max_D);
   endif
-  if(D5 < max_N)
-    ews = expandDataSet(ews, D5, max_N, max_D);
+  if(D5 < max_D)
+    ews = expandDataSet(ews, D5, N, max_D);
   endif
   % DEBUG
   assert(isdefinite(cov(apache)) == 1);
@@ -84,8 +100,9 @@ function [X, d] = loadEwsData()
   workloadsla = dlmread('data/ews/workloadsla.csv', ';', 1, 1);
   d = workloadsla(:, 1)';
   d(all_nan_lines) = [];
+  d = d(1:N);
   Nd = size(d)(2);
-  assert(Nd == max_N)
+  assert(Nd == N)
   % Check for singular covariance matrices.
   for i = 1:5
     assert(isdefinite(cov(reshape(X(:, i, :), max_D, Nd)')) == 1)
