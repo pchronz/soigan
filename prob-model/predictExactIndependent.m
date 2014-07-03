@@ -18,10 +18,10 @@ function [p_0, p_1] = predictExactIndependent(X_next, mus, Sigmas, rho, pi)
     endfor
   endfor
   % XXX Workaround
-  if(sum(sum(p_X_ks, 1) == 0) > 0)
+  if(sum(sum(p_X_ks, 1) < 10^-32) > 0)
     warning('Some services have zero probability for the given monitoring data. Assigning a low probability to obtain a prediction.')
     % Assign a small probability to all indices of the services with zero probability.
-    p_X_ks(:, sum(p_X_ks, 1) == 0) = 10^-8;
+    p_X_ks(:, sum(p_X_ks, 1) < 10^-32) = 10^-8;
   endif
   % weigh the component probabilities with the mixture parameters
   p_X_ks = pi .* p_X_ks;
@@ -29,7 +29,7 @@ function [p_0, p_1] = predictExactIndependent(X_next, mus, Sigmas, rho, pi)
   for l = 1:K^I
     [Z_n, z] = dec2oneofK(l, K, I);
     p_X_Z = prod(p_X_ks(Z_n));
-    p_d = p_d + p_X_Z * rho(l)^d_next * (1-rho(l))^(1-d_next);
+    p_d = p_d + p_X_Z*rho(l)^d_next*(1 - rho(l))^(1 - d_next);
   endfor
   % normalize
   p_0 = prod(sum(p_X_ks, 1))^-1 * p_d;
@@ -49,17 +49,19 @@ function [p_0, p_1] = predictExactIndependent(X_next, mus, Sigmas, rho, pi)
     p_0
     p_1
     p_0 + p_1
-    p_d_comp
+    p_d
     p_X_ks
     mus
     Sigmas
+    rho
     X_next
-    Xn = X_next(:, 4);
-    mun = mus(:, :, 4);
-    Sigman = Sigmas(:, :, :, 4);
-    save temp.mat Xn mun Sigman
+    p_X_Z
+    %Xn = X_next(:, 4);
+    %mun = mus(:, :, 4);
+    %Sigman = Sigmas(:, :, :, 4);
+    %save temp.mat Xn mun Sigman
+    error('The predicted values in the full probabilistic model do not sum to one.')
   endif
-  assert((p_0 + p_1) >= 0.99 && (p_0 + p_1) <= 1.01)
 endfunction
 
 

@@ -1,7 +1,7 @@
 % SERIAL
 load experimentResultsSerial
 
-N = size(svm_correctness_serial);
+N = size(svm_correctness_serial');
 % determine how many entries have actually been computed
 
 % SVM

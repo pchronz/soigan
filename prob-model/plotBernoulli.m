@@ -1,30 +1,29 @@
 % SERIAL
 load experimentResultsSerial
 
-N = size(bernoulli_correctness_serial);
+N = size(bernoulli_correctness_serial');
 % determine how many entries have actually been computed
-
 N = max([1:N](logical(sum(baseline_correctness_serial))));
 % Bernoulli
 % total rate/precision/recall/F-measure
 bernoulli_hit_rate = zeros(4, N);
-for n = 2:N
+for n = min_N:N
   % get the values that count at all
   % count the hits
-  bernoulli_hits = bernoulli_correctness_serial(2:n);
+  bernoulli_hits = bernoulli_correctness_serial(min_N:n);
   % Accuracy
   bernoulli_hit_rate(1, n) = sum(bernoulli_hits)/(n - 1);
   % Precision
-  Z = sum(bernoulli_hits .* !d(2:n)) + sum(!bernoulli_hits(logical(d(2:n))));
+  Z = sum(bernoulli_hits .* !d(min_N:n)) + sum(!bernoulli_hits(logical(d(min_N:n))));
   if(Z > 0)
-    bernoulli_hit_rate(2, n) = sum(bernoulli_hits .* !d(2:n))/Z;
+    bernoulli_hit_rate(2, n) = sum(bernoulli_hits .* !d(min_N:n))/Z;
   else
     bernoulli_hit_rate(2, n) = 0;
   endif
   % Recall
-  Z = sum(bernoulli_hits .* !d(2:n)) + sum(!bernoulli_hits(logical(!d(2:n))));
+  Z = sum(bernoulli_hits .* !d(min_N:n)) + sum(!bernoulli_hits(logical(!d(min_N:n))));
   if(Z > 0)
-    bernoulli_hit_rate(3, n) = sum(bernoulli_hits .* !d(2:n))/Z;
+    bernoulli_hit_rate(3, n) = sum(bernoulli_hits .* !d(min_N:n))/Z;
   else
     bernoulli_hit_rate(3, n) = 0;
   endif

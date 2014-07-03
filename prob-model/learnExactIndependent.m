@@ -66,8 +66,10 @@ function [mus, Sigmas, rho, pi] = learnExactIndependent(K, X, d, max_iter)
     tic()
     disp('Computing posterior...')
     p_Z = computePosterior(mus, Sigmas, pi, rho, X, d, K);
+    assert(isreal(p_Z))
     disp('Normalizing...')
     p_Z = e.^(log(p_Z) .- log(sum(p_Z)));
+    assert(isreal(p_Z))
     if(sum(sum(isnan(p_Z))) != 0)
       p_Z
       Sigmas
@@ -75,6 +77,7 @@ function [mus, Sigmas, rho, pi] = learnExactIndependent(K, X, d, max_iter)
       rho
       pi
     endif
+    assert(sum(sum(isnan(p_Z))) == 0)
     assert(sum(sum(isnan(p_Z))) == 0)
     sum_p_Z = sum(p_Z);
     % Test whether the probabilities over the latent variables approximately sum to 1.

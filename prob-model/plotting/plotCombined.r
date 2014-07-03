@@ -19,6 +19,7 @@ lines(2:last, bernoulli_hit_rate[1, 2:last], type="l", col="red", ylim=c(0, 1), 
 filename <- "baseline_hit_rate_serial";
 baseline_hit_rate_serial <- read.octave(paste("serial/", filename, ".mat", sep=""))
 baseline_hit_rate_serial <- baseline_hit_rate_serial[[1]]
+max_K = length(baseline_hit_rate_serial[, 1, 1])
 last <- length(baseline_hit_rate_serial[max_K, , 1])
 best_K <- which.max(baseline_hit_rate_serial[, last, 1])
 lines(2:last, baseline_hit_rate_serial[best_K, 2:last, 1], type="l", col="blue", ylim=c(0, 1), lty=3, lwd=2)
@@ -26,6 +27,7 @@ lines(2:last, baseline_hit_rate_serial[best_K, 2:last, 1], type="l", col="blue",
 filename <- "prob_model_hit_rate_serial";
 prob_model_hit_rate_serial <- read.octave(paste("serial/", filename, ".mat", sep=""))
 prob_model_hit_rate_serial <- prob_model_hit_rate_serial[[1]]
+max_K = length(prob_model_hit_rate_serial[, 1, 1])
 last <- length(prob_model_hit_rate_serial[max_K, , 1])
 best_K_GMM <- which.max(prob_model_hit_rate_serial[, last, 1])
 lines(2:last, prob_model_hit_rate_serial[best_K_GMM, 2:last, 1], type="l", col="green", ylim=c(0, 1), lty=4, lwd=2)

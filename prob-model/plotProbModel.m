@@ -1,9 +1,6 @@
 % SERIAL
 load experimentResultsSerial
 
-[max_K, N] = size(prob_model_correctness_serial);
-% determine how many entries have actually been computed
-
 % Prob model
 [max_K, N] = size(prob_model_correctness_serial);
 % determine how many entries have actually been computed
@@ -13,19 +10,19 @@ N = max([1:N](logical(sum(prob_model_correctness_serial))));
 % K x N x accuracy/precision/recall/F-measure
 prob_model_hit_rate = zeros(max_K, N, 4);
 for K = [2:max_K]
-  for n = 2:N
+  for n = min_N:N
     % Accuracy
-    prob_model_hit_rate(K, n, 1) = sum(prob_model_correctness_serial(K, 2:n))/(n - 1);
+    prob_model_hit_rate(K, n, 1) = sum(prob_model_correctness_serial(K, min_N:n))/(n - 1);
     % Precision
-    Z = sum(prob_model_correctness_serial(K, ~logical(d(2:n)))) + sum(!prob_model_correctness_serial(K, logical(d(2:n))));
+    Z = sum(prob_model_correctness_serial(K, ~logical(d(min_N:n)))) + sum(!prob_model_correctness_serial(K, logical(d(min_N:n))));
     if(Z > 0)
-      prob_model_hit_rate(K, n, 2) = sum(prob_model_correctness_serial(K, ~logical(d(2:n)))) / Z;
+      prob_model_hit_rate(K, n, 2) = sum(prob_model_correctness_serial(K, ~logical(d(min_N:n)))) / Z;
     else
       prob_model_hit_rate(K, n, 2) = 0;
     endif
     % Recall
-    if(sum(!d(2:n)) > 0)
-      prob_model_hit_rate(K, n, 3) = sum(prob_model_correctness_serial(K, ~logical(d(2:n)))) / sum(!d(2:n));
+    if(sum(!d(min_N:n)) > 0)
+      prob_model_hit_rate(K, n, 3) = sum(prob_model_correctness_serial(K, ~logical(d(min_N:n)))) / sum(!d(min_N:n));
     else
       prob_model_hit_rate(K, n, 3) = 0;
     endif
