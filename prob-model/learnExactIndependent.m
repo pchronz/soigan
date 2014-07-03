@@ -155,11 +155,14 @@ function [mus, Sigmas, rho, pi] = learnExactIndependent(K, X, d, max_iter)
     rho = rho ./ sum_p_Z;
     % Test whether all rho values are ok.
     if(sum(isnan(rho)) != 0)
+      sum_p_Z
+      min(sum_p_Z)
       p_Z
-      d'
+      pi
+      d
       rho
+      error('There are NaN entries in rho!')
     endif
-    assert(sum(isnan(rho)) == 0)
     toc()
     % pi, mus
     disp('M-step pi, mus')

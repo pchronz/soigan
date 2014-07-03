@@ -14,6 +14,11 @@ function [baseline_correctness_serial, baseline_training_serial, baseline_predic
   bernoulli_correctness_serial = zeros(1, N);
   bernoulli_training_serial = zeros(1, N);
   bernoulli_prediction_serial = zeros(1, N);
+
+  % Ensure that we have a value for each class in the data set.
+  first_neg = min([1:N](d == 0));
+  first_pos = min([1:N](d == 1));
+  min_N = max([first_neg, first_pos, min_N]);
   
   % Bernoulli (max likelihood)
   for n = min_N:N - 1
@@ -71,9 +76,7 @@ function [baseline_correctness_serial, baseline_training_serial, baseline_predic
       svm_prediction_serial(n) = -1;
     endif
   endfor
-  disp('SVM failures for n = ')
   [D, I, N] = size(X);
-  [1:N](svm_correctness_serial == -1)
 
   % going one step ahead is fine as long as the time required for prediction and training
   % is less than the current time plus the time for which we wish to predict. Actually there
