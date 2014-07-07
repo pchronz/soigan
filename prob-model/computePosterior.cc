@@ -7,12 +7,12 @@
 // XXX ad-hoc implementation; should use Cholesky factorization instead
 double mvnpdf(Matrix x, Matrix mu, Matrix Sigma) {
   // XXX is this Pi any good?
-  double const Pi = 4 * atan(1);
+  long double const Pi = 4 * atan(1);
   int D = x.dims()(0);
-  double p = pow(2 * Pi, -D*0.5);
-  double det = Sigma.determinant().value();
+  long double p = pow(2 * Pi, -D*0.5);
+  long double det = Sigma.determinant().value();
   p *= 1.0/sqrt(det);
-  double exp = -0.5 * ((x - mu).transpose() * Sigma.inverse() * (x - mu))(0, 0);
+  long double exp = (long double)-0.5 * ((x - mu).transpose() * Sigma.inverse() * (x - mu))(0, 0);
   p *= std::exp(exp);
   return p;
 }
@@ -104,7 +104,7 @@ DEFUN_DLD (computePosterior, args, nargout, "") {
             Sigma_l_i(d1, d2) = Sigmas_l(Sigmas_idx);
           }
         }
-        double p_x_n_i = mvnpdf(x_n_i, mu_l_i, Sigma_l_i);
+        long double p_x_n_i = mvnpdf(x_n_i, mu_l_i, Sigma_l_i);
         p_Z(l, n) *= pi_l(0, i) * p_x_n_i;
       }
     }

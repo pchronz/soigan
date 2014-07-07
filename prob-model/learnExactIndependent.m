@@ -66,19 +66,28 @@ function [mus, Sigmas, rho, pi] = learnExactIndependent(K, X, d, max_iter)
     tic()
     disp('Computing posterior...')
     p_Z = computePosterior(mus, Sigmas, pi, rho, X, d, K);
+    %p_Z = computePosteriorSlow(mus, Sigmas, pi, rho, X, d, K);
     assert(isreal(p_Z))
     disp('Normalizing...')
+    if(sum(sum(p_Z < 0)))
+      save badposteriorparams.mat mus Sigmas pi rho X d K
+      error('Unmormalized p_Z contains negative entries')
+    endif
+    % Fill up 0-entries.
+    p_Z = replaceZeros(p_Z);
+    % Normalization
     p_Z = e.^(log(p_Z) .- log(sum(p_Z)));
-    assert(isreal(p_Z))
+    if(!isreal(p_Z))
+      p_Z
+    endif
     if(sum(sum(isnan(p_Z))) != 0)
       p_Z
       Sigmas
       mus
       rho
       pi
+      error('p_Z contains NaNs')
     endif
-    assert(sum(sum(isnan(p_Z))) == 0)
-    assert(sum(sum(isnan(p_Z))) == 0)
     sum_p_Z = sum(p_Z);
     % Test whether the probabilities over the latent variables approximately sum to 1.
     fo1 = sum(sum(p_Z) >= 1.0001);
@@ -89,42 +98,6 @@ function [mus, Sigmas, rho, pi] = learnExactIndependent(K, X, d, max_iter)
       fo2
     endif
     assert(fo1 == 0 && fo2 == 0)
-    toc()
-    %tic()
-    %p_Z = zeros(K^I, N);
-    %for n = 1:N
-    %  n
-    %  for l = 1:K^I
-    %    [Z_n, z] = dec2oneOfK(l, K, I);
-    %    % select the right mus
-    %    mus_l = zeros(D, I);
-    %    % z_idx = (base2dec(z(1, :)', K)) + 1;
-    %    z_idx = zeros(I, 1);
-    %    for i = 1:I
-    %      z_idx(i) = base2decfast(z(1, i), K) + 1;
-    %    endfor
-    %    % assert(z_idx == z_idx_fast)
-    %    for i = 1:I
-    %      mus_l(:, i) = mus(:, z_idx(i), i);
-    %    endfor
-    %    % select the right Sigmas
-    %    Sigmas_l = zeros(D, D, I);
-    %    for i = 1:I
-    %      Sigmas_l(:, :, i) = Sigmas(:, :, z_idx(i), i);
-    %    endfor
-    %    % select the right pis
-    %    pi_l = pi(logical(Z_n));
-    %    % compute the posterior for the current state and observation
-    %    p_Z(l, n) = rho(l)^d(n) * (1 - rho(l))^(1 - d(n));
-    %    for i = 1:I
-    %      p_x_n_i = mvnpdf(X(:, i, n)', mus_l(:, i)', Sigmas_l(:, :, i));
-    %      p_Z(l, n) = p_Z(l, n) * pi_l(i) * p_x_n_i;
-    %    endfor
-    %  endfor
-    %endfor
-    %% normalize
-    %%p_Z = p_Z ./ sum(p_Z);
-    %p_Z = e.^(log(p_Z) .- log(sum(p_Z)));
     % DEBUG
     if(sum(sum(isnan(p_Z))) != 0)
       p_Z
@@ -302,6 +275,15 @@ function S = replaceSingularCovariance(Sigmas)
     S = Sigmas;
 endfunction
 
-
+function p_Z = replaceZeros(p_Z)
+  [L, N] = size(p_Z);
+  for n = 1:N
+    % First get the indices of the 0-valued entries.
+    idx = p_Z(:, n) == 0;
+    p_min = (10*eps)*sum(p_Z(!idx, n))/(10*eps)*(1 - eps*(L - sum(double(!idx))));
+    p_Z(idx, n) = p_min;
+  end
+  assert(sum(sum(double(p_Z == 0))) == 0);
+endfunction
 
 
