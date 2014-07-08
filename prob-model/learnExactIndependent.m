@@ -232,8 +232,9 @@ function S = replaceSingularCovariance(Sigmas)
           % Force the matrix to be symmetric using the lower triangular part.
           Sigmas(:, :, k, i) = tril(Sigmas(:, :, k, i), -1)' + tril(Sigmas(:, :, k, i));
           warning('Covariance matrix is not symmetric')
+        endif
         % Is Sigma_ki positive definite?
-        elseif(isdefinite(Sigma_ki) != 1)
+        if(isdefinite(Sigma_ki) != 1)
           disp('Discovered a covariance matrix that is not positive definite.')
           k
           i
