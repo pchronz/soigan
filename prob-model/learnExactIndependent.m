@@ -228,7 +228,8 @@ function S = replaceSingularCovariance(Sigmas)
           Sigma_ki
           k
           i
-          sum(sum(abs(Sigma_ki - Sigma_ki'))
+          sum(sum(abs(Sigma_ki - Sigma_ki')))
+          % TODO Find a good approximation for the minimum isotropic covariance.
           Sigmas(:, :, k, i) = eye(D);
           warn('Covariance matrix is not symmetric')
         % Is Sigma_ki positive definite?
@@ -249,6 +250,7 @@ function S = replaceSingularCovariance(Sigmas)
           % Set the component's covariance to the isotropic covariance.
           % Using a relatively small value for the covariance, which depends on machine precision.
           %Sigmas(:, :, k, i) = 4*eps^(2/N*D)*eye(D);
+          % TODO Find a good approximation for the minimum isotropic covariance.
           Sigmas(:, :, k, i) = eye(D);
           %% Sample a value from a multi-variate Gaussian with mu_ki and alpha.
           %x_new = mvnrnd(mus(:, k, i)', Sigmas(:, :, k, i));
