@@ -229,8 +229,8 @@ function S = replaceSingularCovariance(Sigmas)
           k
           i
           sum(sum(abs(Sigma_ki - Sigma_ki')))
-          % TODO Find a good approximation for the minimum isotropic covariance.
-          Sigmas(:, :, k, i) = eye(D);
+          % Force the matrix to be symmetric using the lower triangular part.
+          Sigmas(:, :, k, i) = tril(Sigmas(:, :, k, i), -1)' + tril(Sigmas(:, :, k, i));
           warning('Covariance matrix is not symmetric')
         % Is Sigma_ki positive definite?
         elseif(isdefinite(Sigma_ki) != 1)
