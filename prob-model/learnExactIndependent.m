@@ -228,10 +228,11 @@ function S = replaceSingularCovariance(Sigmas)
           Sigma_ki
           k
           i
-        end
-        assert(issymmetric(Sigma_ki, eps))
+          sum(sum(abs(Sigma_ki - Sigma_ki'))
+          Sigmas(:, :, k, i) = eye(D);
+          warn('Covariance matrix is not symmetric')
         % Is Sigma_ki positive definite?
-        if(isdefinite(Sigma_ki) != 1)
+        elseif(isdefinite(Sigma_ki) != 1)
           disp('Discovered a covariance matrix that is not positive definite.')
           k
           i
