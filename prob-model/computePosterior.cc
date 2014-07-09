@@ -14,6 +14,9 @@ double mvnpdf(Matrix x, Matrix mu, Matrix Sigma) {
   p *= 1.0/sqrt(det);
   long double exp = (long double)-0.5 * ((x - mu).transpose() * Sigma.inverse() * (x - mu))(0, 0);
   p *= std::exp(exp);
+  // DEBUG
+  if(p < 0)
+    std::cerr << "The adhoc MVN implementation just returned a negative probability density" << '\n';
   return p;
 }
 
@@ -106,6 +109,8 @@ DEFUN_DLD (computePosterior, args, nargout, "") {
         }
         long double p_x_n_i = mvnpdf(x_n_i, mu_l_i, Sigma_l_i);
         p_Z(l, n) *= pi_l(0, i) * p_x_n_i;
+        if(p_Z(l, n) < 0) 
+          std::cerr << "p_Z just turned negative: i = " << i << " n = " << n << " l = " << l << '\n';
       }
     }
   }

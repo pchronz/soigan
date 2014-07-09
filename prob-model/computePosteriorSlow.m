@@ -1,4 +1,4 @@
-function [p_Z, mvn] = computePosteriorSlow(mus, Sigmas, pi, rho, X, d, K)
+function p_Z = computePosteriorSlow(mus, Sigmas, pi, rho, X, d, K)
     [D, D, K, I] = size(Sigmas);
     [D, I, N] = size(X);
     p_Z = zeros(K^I, N);
@@ -31,8 +31,6 @@ function [p_Z, mvn] = computePosteriorSlow(mus, Sigmas, pi, rho, X, d, K)
         for i = 1:I
           p_x_n_i = mvnpdf(X(:, i, n)', mus_l(:, i)', Sigmas_l(:, :, i));
           p_Z(l, n) = p_Z(l, n) * pi_l(i) * p_x_n_i;
-          % DEBUG
-          mvn(n, (l - 1)*I + i) = p_x_n_i;
         endfor
       endfor
     endfor
