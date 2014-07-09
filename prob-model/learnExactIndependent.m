@@ -66,14 +66,13 @@ function [mus, Sigmas, rho, pi] = learnExactIndependent(K, X, d, max_iter)
     tic()
     disp('Computing posterior...')
     p_Z = computePosterior(mus, Sigmas, pi, rho, X, d, K);
-    p_Z_slow = computePosteriorSlow(mus, Sigmas, pi, rho, X, d, K);
-    mean(mean(abs(p_Z - p_Z_slow)))
+    %p_Z = computePosteriorSlow(mus, Sigmas, pi, rho, X, d, K);
     disp('Normalizing...')
     if(sum(sum(p_Z < 0)))
       p_Z_slow = computePosteriorSlow(mus, Sigmas, pi, rho, X, d, K);
-      disp('Number of sub-zero entries in fast posterior:')
+      disp('Number of negative entries in fast posterior:')
       sum(sum(p_Z < 0))
-      disp('Number of sub-zero entries in slow posterior:')
+      disp('Number of negative entries in slow posterior:')
       sum(sum(p_Z_slow < 0))
       save badposteriorparams.mat mus Sigmas pi rho X d K p_Z
       error('Pre-normalized p_Z contains negative entries')
