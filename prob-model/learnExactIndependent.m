@@ -70,8 +70,8 @@ function [mus, Sigmas, rho, pi] = learnExactIndependent(K, X, d, max_iter)
     assert(isreal(p_Z))
     disp('Normalizing...')
     if(sum(sum(p_Z < 0)))
-      save badposteriorparams.mat mus Sigmas pi rho X d K
-      error('Unmormalized p_Z contains negative entries')
+      save badposteriorparams.mat mus Sigmas pi rho X d K p_Z
+      error('Pre-normalized p_Z contains negative entries')
     endif
     % Fill up 0-entries.
     p_Z = replaceZeros(p_Z);
