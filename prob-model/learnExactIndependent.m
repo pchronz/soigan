@@ -66,8 +66,8 @@ function [mus, Sigmas, rho, pi] = learnExactIndependent(K, X, d, max_iter)
     tic()
     disp('Computing posterior...')
     p_Z = computePosterior(mus, Sigmas, pi, rho, X, d, K);
-    %p_Z = computePosteriorSlow(mus, Sigmas, pi, rho, X, d, K);
-    assert(isreal(p_Z))
+    p_Z_slow = computePosteriorSlow(mus, Sigmas, pi, rho, X, d, K);
+    mean(mean(abs(p_Z - p_Z_slow)))
     disp('Normalizing...')
     if(sum(sum(p_Z < 0)))
       p_Z_slow = computePosteriorSlow(mus, Sigmas, pi, rho, X, d, K);
@@ -84,6 +84,7 @@ function [mus, Sigmas, rho, pi] = learnExactIndependent(K, X, d, max_iter)
     p_Z = e.^(log(p_Z) .- log(sum(p_Z)));
     if(!isreal(p_Z))
       p_Z
+      error('Posterior contains complex entries')
     endif
     if(sum(sum(isnan(p_Z))) != 0)
       p_Z

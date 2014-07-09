@@ -5,7 +5,9 @@ function p_Z = computePosteriorSlow(mus, Sigmas, pi, rho, X, d, K)
     % DEBUG
     mvn = zeros(N, K^I*I);
     for n = 1:N
-      n
+      if(mod(n, 50) == 0)
+        n
+      endif
       for l = 1:K^I
         [Z_n, z] = dec2oneOfK(l, K, I);
         % select the right mus
@@ -27,13 +29,15 @@ function p_Z = computePosteriorSlow(mus, Sigmas, pi, rho, X, d, K)
         % select the right pis
         pi_l = pi(logical(Z_n));
         % compute the posterior for the current state and observation
-        p_Z(l, n) = rho(l)^d(n) * (1 - rho(l))^(1 - d(n));
+        p_Z(l, n) = log(rho(l)^d(n)) + log((1 - rho(l))^(1 - d(n)));
         for i = 1:I
           p_x_n_i = mvnpdf(X(:, i, n)', mus_l(:, i)', Sigmas_l(:, :, i));
-          p_Z(l, n) = p_Z(l, n) * pi_l(i) * p_x_n_i;
+          p_Z(l, n) = p_Z(l, n) + log(pi_l(i)) + log(p_x_n_i);
         endfor
       endfor
     endfor
+    % Un-log
+    p_Z = e.^p_Z;
     % normalize
     %p_Z = p_Z ./ sum(p_Z);
     %p_Z = e.^(log(p_Z) .- log(sum(p_Z)));

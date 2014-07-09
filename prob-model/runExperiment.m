@@ -14,8 +14,8 @@ Delay = [0:0];
 It = 20;
 min_K = 2;
 max_K = 2;
-min_N = 1;
-max_N = 5000;
+min_N = 150;
+max_N = 1000;
 refresh_rate = 25;
 
 det = false;

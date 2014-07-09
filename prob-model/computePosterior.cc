@@ -86,7 +86,7 @@ DEFUN_DLD (computePosterior, args, nargout, "") {
         pi_l(0, i) = pi(z_idx(i, 0), i);
       }
       // compute the posterior for the current state and observation
-      p_Z(l, n) = std::pow(rho(l, 0), d(0, n)) * std::pow((1 - rho(l, 0)), (1 - d(0, n)));
+      p_Z(l, n) = log(rho(l, 0))*d(0, n) + log(1 - rho(l, 0))*(1 - d(0, n));
       for(int i = 0; i < I; i++) {
         Matrix x_n_i(D, 1);
         for(int d = 0; d < D; d++) {
@@ -108,10 +108,10 @@ DEFUN_DLD (computePosterior, args, nargout, "") {
           }
         }
         long double p_x_n_i = mvnpdf(x_n_i, mu_l_i, Sigma_l_i);
-        p_Z(l, n) *= pi_l(0, i) * p_x_n_i;
-        if(p_Z(l, n) < 0) 
-          std::cerr << "p_Z just turned negative: i = " << i << " n = " << n << " l = " << l << '\n';
+        p_Z(l, n) += log(pi_l(0, i)) + log(p_x_n_i);
       }
+      // Un-log
+      p_Z(l, n) = exp(p_Z(l, n));
     }
   }
   //p_Z = p_Z * p_Z.sum().diag().inverse();
