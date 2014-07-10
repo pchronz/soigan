@@ -77,6 +77,16 @@ function [mus, Sigmas, rho, pi] = learnExactIndependent(K, X, d, max_iter)
       save badposteriorparams.mat mus Sigmas pi rho X d K p_Z
       error('Pre-normalized p_Z contains negative entries')
     endif
+    if(sum(sum(isnan(p_Z))) != 0)
+      more on
+      p_Z
+      Sigmas
+      mus
+      rho
+      pi
+      more off
+      error('Pre-normalized p_Z contains NaNs')
+    endif
     % Fill up 0-entries.
     p_Z = replaceZeros(p_Z);
     % Normalization
@@ -86,11 +96,13 @@ function [mus, Sigmas, rho, pi] = learnExactIndependent(K, X, d, max_iter)
       error('Posterior contains complex entries')
     endif
     if(sum(sum(isnan(p_Z))) != 0)
+      more on
       p_Z
       Sigmas
       mus
       rho
       pi
+      more off
       error('p_Z contains NaNs')
     endif
     sum_p_Z = sum(p_Z);
@@ -182,6 +194,15 @@ function [mus, Sigmas, rho, pi] = learnExactIndependent(K, X, d, max_iter)
     disp('M-step Sigmas')
     tic()
     [Sigmas] = maxSigmas(X, mus, p_Z);
+    % DEBUG
+    if(!isreal(Sigmas))
+      more on
+      Sigmas
+      p_Z
+      save imaginarySigmas.mat X mus p_Z Sigmas
+      more off
+      error('Freshly maximized Sigmas contain some imaginary entries')
+    endif
     toc()
     %tic()
     %Sigmas = Sigmas .* 0;
