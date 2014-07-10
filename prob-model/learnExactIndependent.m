@@ -33,7 +33,7 @@ function [mus, Sigmas, rho, pi] = learnExactIndependent(K, X, d, max_iter)
       mus(:, :, i) = centers';
       idx_all(i, :) = idx';
     endfor
-    save kmeans_results.mat idx_all mus
+    save kmeans_results.mat idx_all mus;
   endif
   for i = 1:I
     % compute the intra-cluster covariance and use it to initialize the component covariance
@@ -79,12 +79,14 @@ function [mus, Sigmas, rho, pi] = learnExactIndependent(K, X, d, max_iter)
     %p_Z = computePosteriorSlow(mus, Sigmas, pi, rho, X, d, K);
     disp('Normalizing...')
     if(sum(sum(p_Z < 0)))
+      more on
       p_Z_slow = computePosteriorSlow(mus, Sigmas, pi, rho, X, d, K);
       disp('Number of negative entries in fast posterior:')
       sum(sum(p_Z < 0))
       disp('Number of negative entries in slow posterior:')
       sum(sum(p_Z_slow < 0))
-      save badposteriorparams.mat mus Sigmas pi rho X d K p_Z
+      save badposteriorparams.mat mus Sigmas pi rho X d K p_Z;
+      more off
       error('Pre-normalized p_Z contains negative entries')
     endif
     % Fill up 0-entries.
@@ -239,7 +241,7 @@ function S = replaceSingularCovariance(Sigmas)
         Sigma_ki = Sigmas(:, :, k, i);
         % Sometimes numerical instabilities lead to non-symmetric covariance matrices.
         if(!issymmetric(Sigma_ki, eps))
-          save temp.mat Sigma_ki
+          save temp.mat Sigma_ki;
           Sigma_ki
           k
           i
@@ -299,7 +301,8 @@ function p_Z = replaceZeros(p_Z)
   for n = 1:N
     % First get the indices of the 0-valued entries.
     idx = p_Z(:, n) == 0;
-    p_min = (10*eps)*sum(p_Z(!idx, n))/(10*eps)*(1 - eps*(L - sum(double(!idx))));
+    eps_ = 10^-250
+    p_min = (10*eps_)*sum(p_Z(!idx, n))/(10*eps_)*(1 - eps_*(L - sum(double(!idx))));
     p_Z(idx, n) = p_min;
   end
   assert(sum(sum(double(p_Z == 0))) == 0);
