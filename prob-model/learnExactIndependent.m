@@ -1,4 +1,5 @@
 function [mus, Sigmas, rho, pi] = learnExactIndependent(K, X, d, max_iter)
+  global deter;
   disp('Init tic')
   tic()
   [D, I, N] = size(X);
@@ -10,29 +11,38 @@ function [mus, Sigmas, rho, pi] = learnExactIndependent(K, X, d, max_iter)
   rho = 0.5 * ones(K^I, 1);
 
   % run k-means to obtain an initial estimate for the mixture components (mean and covariance)
-  for i = 1:I
-    X_i = reshape(X(:, i, :), D, N);
+  idx_all = zeros(I, N);
+  if(deter)
+    load kmeans_results;
+  else
+    for i = 1:I
+      X_i = reshape(X(:, i, :), D, N);
 
-    empty = true;
-    idx = 0;
-    centers = 0;
-    while(empty)
-      try
-        [idx, centers] = kmeans(X_i', K);
-        empty = false;
-      catch
-        i
-        disp('Got an empty cluster, trying again...');
-      end_try_catch
-    endwhile
-    mus(:, :, i) = centers';
+      empty = true;
+      idx = 0;
+      centers = 0;
+      while(empty)
+        try
+          [idx, centers] = kmeans(X_i', K);
+          empty = false;
+        catch
+          i
+          disp('Got an empty cluster, trying again...');
+        end_try_catch
+      endwhile
+      mus(:, :, i) = centers';
+      idx_all(i, :) = idx';
+    endfor
+    save kmeans_results.mat idx_all mus
+  endif
+  for i = 1:I
     % compute the intra-cluster covariance and use it to initialize the component covariance
     i
     for k = 1:K
       % We need at least two observations to compute the sample covariance.
       % Otherwise just, stay with the isotropic unit-variance.
       if(sum(idx == k) >= 2)
-        Sigmas(:, :, k, i) = cov(X_i(:, idx' == k)');
+        Sigmas(:, :, k, i) = cov(X_i(:, idx_all(i, :) == k)');
       endif
     endfor
   endfor

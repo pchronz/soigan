@@ -18,10 +18,10 @@ min_N = 150;
 max_N = 1000;
 refresh_rate = 25;
 
-det = false;
+global deter = true;
 X = 0;
 d = 0;
-if(det)
+if(deter)
   disp('Using previously used data set.')
   load('detdata.mat');
 else
