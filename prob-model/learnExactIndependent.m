@@ -41,7 +41,7 @@ function [mus, Sigmas, rho, pi] = learnExactIndependent(K, X, d, max_iter)
     for k = 1:K
       % We need at least two observations to compute the sample covariance.
       % Otherwise just, stay with the isotropic unit-variance.
-      if(sum(idx == k) >= 2)
+      if(sum(idx_all == k) >= 2)
         Sigmas(:, :, k, i) = cov(X_i(:, idx_all(i, :) == k)');
       endif
     endfor
@@ -89,6 +89,16 @@ function [mus, Sigmas, rho, pi] = learnExactIndependent(K, X, d, max_iter)
       more off
       error('Pre-normalized p_Z contains negative entries')
     endif
+    if(sum(sum(isnan(p_Z))) != 0)
+      more on
+      p_Z
+      Sigmas
+      mus
+      rho
+      pi
+      more off
+      error('Pre-normalized p_Z contains NaNs')
+    endif
     % Fill up 0-entries.
     p_Z = replaceZeros(p_Z);
     % Normalization
@@ -98,11 +108,13 @@ function [mus, Sigmas, rho, pi] = learnExactIndependent(K, X, d, max_iter)
       error('Posterior contains complex entries')
     endif
     if(sum(sum(isnan(p_Z))) != 0)
+      more on
       p_Z
       Sigmas
       mus
       rho
       pi
+      more off
       error('p_Z contains NaNs')
     endif
     sum_p_Z = sum(p_Z);
@@ -194,6 +206,15 @@ function [mus, Sigmas, rho, pi] = learnExactIndependent(K, X, d, max_iter)
     disp('M-step Sigmas')
     tic()
     [Sigmas] = maxSigmas(X, mus, p_Z);
+    % DEBUG
+    if(!isreal(Sigmas))
+      more on
+      Sigmas
+      p_Z
+      save imaginarySigmas.mat X mus p_Z Sigmas
+      more off
+      error('Freshly maximized Sigmas contain some imaginary entries')
+    endif
     toc()
     %tic()
     %Sigmas = Sigmas .* 0;
@@ -250,6 +271,12 @@ function S = replaceSingularCovariance(Sigmas)
           Sigmas(:, :, k, i) = tril(Sigmas(:, :, k, i), -1)' + tril(Sigmas(:, :, k, i));
           warning('Covariance matrix is not symmetric')
         endif
+	if(!isreal(Sigma_ki))
+	  more on
+	  Sigma_ki
+	  more off
+	  error('Sigma_ki contains imaginary values')
+	endif
         % Is Sigma_ki positive definite?
         if(isdefinite(Sigma_ki) != 1)
           disp('Discovered a covariance matrix that is not positive definite.')
