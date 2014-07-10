@@ -47,8 +47,13 @@ function p_Z = computePosteriorSlow(mus, Sigmas, pi, rho, X, d, K)
         endfor
       endfor
     endfor
+    % Scale the values, so that the largest un-normalized entry for the posterior for one n is 10.
+    max_entries = max(p_Z);
+    p_Z = p_Z - max_entries + log(10);
+    assert(!any(any(isnan(p_Z))))
     % Un-log
     p_Z = e.^p_Z;
+    assert(!any(any(isnan(p_Z))))
     % normalize
     %p_Z = p_Z ./ sum(p_Z);
     %p_Z = e.^(log(p_Z) .- log(sum(p_Z)));
