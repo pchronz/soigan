@@ -3,6 +3,8 @@ more off
 pkg load statistics
 pkg load nan
 
+clear
+
 % TODO sampling of exact posterior
 % TODO maximization based on sampling
 % TODO scenario ranking

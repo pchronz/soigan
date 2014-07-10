@@ -41,7 +41,7 @@ function [mus, Sigmas, rho, pi] = learnExactIndependent(K, X, d, max_iter)
     for k = 1:K
       % We need at least two observations to compute the sample covariance.
       % Otherwise just, stay with the isotropic unit-variance.
-      if(sum(idx == k) >= 2)
+      if(sum(idx_all == k) >= 2)
         Sigmas(:, :, k, i) = cov(X_i(:, idx_all(i, :) == k)');
       endif
     endfor
@@ -269,6 +269,12 @@ function S = replaceSingularCovariance(Sigmas)
           Sigmas(:, :, k, i) = tril(Sigmas(:, :, k, i), -1)' + tril(Sigmas(:, :, k, i));
           warning('Covariance matrix is not symmetric')
         endif
+	if(!isreal(Sigma_ki))
+	  more on
+	  Sigma_ki
+	  more off
+	  error('Sigma_ki contains imaginary values')
+	endif
         % Is Sigma_ki positive definite?
         if(isdefinite(Sigma_ki) != 1)
           disp('Discovered a covariance matrix that is not positive definite.')
