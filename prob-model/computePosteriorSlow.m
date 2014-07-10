@@ -5,7 +5,7 @@ function p_Z = computePosteriorSlow(mus, Sigmas, pi, rho, X, d, K)
     % DEBUG
     mvn = zeros(N, K^I*I);
     for n = 1:N
-      if(mod(n, 50) == 0)
+      if(mod(n, 50) == 0 || n == N)
         n
       endif
       for l = 1:K^I
@@ -31,8 +31,8 @@ function p_Z = computePosteriorSlow(mus, Sigmas, pi, rho, X, d, K)
         % compute the posterior for the current state and observation
         p_Z(l, n) = log(rho(l)^d(n)) + log((1 - rho(l))^(1 - d(n)));
         for i = 1:I
-          p_x_n_i = mvnpdf(X(:, i, n)', mus_l(:, i)', Sigmas_l(:, :, i));
-          p_Z(l, n) = p_Z(l, n) + log(pi_l(i)) + log(p_x_n_i);
+          log_p_x_n_i = logmvnpdf(X(:, i, n), mus_l(:, i), Sigmas_l(:, :, i));
+          p_Z(l, n) = p_Z(l, n) + log(pi_l(i)) + log_p_x_n_i;
         endfor
       endfor
     endfor
@@ -49,5 +49,11 @@ function p_Z = computePosteriorSlow(mus, Sigmas, pi, rho, X, d, K)
     %    error('p_Z does not sum to one')
     %  endif
     %endfor
+endfunction
+
+function lp = logmvnpdf(x, mu, Sigma)
+  D = size(x);
+  % TODO Use Cholesky decomposition for better numerical stability?!
+  lp = -0.5*D*log(2*pi) - 0.5*log(det(Sigma)) - 0.5*(x - mu)'*inv(Sigma)*(x - mu);
 endfunction
 
