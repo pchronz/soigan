@@ -52,7 +52,7 @@ function p_Z = computePosteriorSlow(mus, Sigmas, pi, rho, X, d, K)
 endfunction
 
 function lp = logmvnpdf(x, mu, Sigma)
-  D = size(x);
+  D = length(x);
   % TODO Use Cholesky decomposition for better numerical stability?!
   lp = -0.5*D*log(2*pi) - 0.5*log(det(Sigma)) - 0.5*(x - mu)'*inv(Sigma)*(x - mu);
 endfunction
