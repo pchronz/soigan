@@ -95,6 +95,15 @@ function [mus, Sigmas, rho, pi] = learnExactIndependent(K, X, d, max_iter)
       more off
       error('Pre-normalized p_Z contains NaNs')
     endif
+    if(!isreal(p_Z))
+      more on
+      p_Z
+      rho
+      mus 
+      Sigmas
+      more off
+      error('Pre-normalized p_Z not real')
+    endif
     % Fill up 0-entries.
     p_Z = replaceZeros(p_Z);
     % Normalization
@@ -114,15 +123,6 @@ function [mus, Sigmas, rho, pi] = learnExactIndependent(K, X, d, max_iter)
       error('p_Z contains NaNs')
     endif
     sum_p_Z = sum(p_Z);
-    % Test whether the probabilities over the latent variables approximately sum to 1.
-    fo1 = sum(sum(p_Z) >= 1.0001);
-    fo2 = sum(sum(p_Z) < 0.9999);
-    if(fo1 != 0 || fo2 != 0)
-      p_Z
-      fo1
-      fo2
-    endif
-    assert(fo1 == 0 && fo2 == 0)
     % DEBUG
     if(sum(sum(isnan(p_Z))) != 0)
       p_Z
@@ -133,15 +133,6 @@ function [mus, Sigmas, rho, pi] = learnExactIndependent(K, X, d, max_iter)
     endif
     assert(sum(sum(isnan(p_Z))) == 0)
     sum_p_Z = sum(p_Z);
-    % Test whether the probabilities over the latent variables approximately sum to 1.
-    fo1 = sum(sum(p_Z) >= 1.0001);
-    fo2 = sum(sum(p_Z) < 0.9999);
-    if(fo1 != 0 || fo2 != 0)
-      p_Z
-      fo1
-      fo2
-    endif
-    assert(fo1 == 0 && fo2 == 0)
     disp('E-step toc')
     toc()
 
@@ -170,7 +161,10 @@ function [mus, Sigmas, rho, pi] = learnExactIndependent(K, X, d, max_iter)
     tic()
     [mus, pi] = maxMuPi(p_Z, X, K);
     % Test whether the probabilities over the mixture components sum approximately to 1. 
-    assert(sum(sum(pi) >= 1.0001) == 0 && sum(sum(pi) <= 0.9999) == 0)
+    if(!(sum(sum(pi) >= 1.0001) == 0) || !(sum(sum(pi) <= 0.9999) == 0))
+      sum(pi)
+      error('pi does not sum to one after maximization')
+    endif
     % toc()
     % tic()
     % pi = pi .* 0;
@@ -325,7 +319,7 @@ function p_Z = replaceZeros(p_Z)
     % First get the indices of the 0-valued entries.
     idx = p_Z(:, n) == 0;
     eps_ = 10^-250;
-    p_min = (10*eps_)*sum(p_Z(!idx, n))/(10*eps_)*(1 - eps_*(L - sum(double(!idx))));
+    p_min = sum(p_Z(!idx, n))/(1 - eps_*(L - sum(double(!idx))));
     p_Z(idx, n) = p_min;
   end
   assert(sum(sum(double(p_Z == 0))) == 0);

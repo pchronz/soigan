@@ -33,6 +33,17 @@ function p_Z = computePosteriorSlow(mus, Sigmas, pi, rho, X, d, K)
         for i = 1:I
           log_p_x_n_i = logmvnpdf(X(:, i, n), mus_l(:, i), Sigmas_l(:, :, i));
           p_Z(l, n) = p_Z(l, n) + log(pi_l(i)) + log_p_x_n_i;
+          % DEBUG
+          if(!isreal(p_Z(l, n)))
+            more on
+            rho
+            pi_l(i)
+            log_p_x_n_i
+            l
+            n
+            more off
+            error('p_Z(l, n) is not real')
+          endif
         endfor
       endfor
     endfor
