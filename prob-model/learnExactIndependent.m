@@ -75,8 +75,8 @@ function [mus, Sigmas, rho, pi] = learnExactIndependent(K, X, d, max_iter)
     disp('E-step tic');
     tic()
     disp('Computing posterior...')
-    p_Z = computePosterior(mus, Sigmas, pi, rho, X, d, K);
-    %p_Z = computePosteriorSlow(mus, Sigmas, pi, rho, X, d, K);
+    %p_Z = computePosterior(mus, Sigmas, pi, rho, X, d, K);
+    p_Z = computePosteriorSlow(mus, Sigmas, pi, rho, X, d, K);
     disp('Normalizing...')
     if(sum(sum(p_Z < 0)))
       p_Z_slow = computePosteriorSlow(mus, Sigmas, pi, rho, X, d, K);
@@ -94,6 +94,11 @@ function [mus, Sigmas, rho, pi] = learnExactIndependent(K, X, d, max_iter)
       mus
       rho
       pi
+      disp('Number of NaNs in C++-computed posterior:')
+      sum(sum(isnan(p_Z)))
+      disp('Number of NaNs in Octave-computed posterior:')
+      p_Z_slow = computePosteriorSlow(mus, Sigmas, pi, rho, X, d, K);
+      sum(sum(isnan(p_Z_slow)))
       more off
       error('Pre-normalized p_Z contains NaNs')
     endif
