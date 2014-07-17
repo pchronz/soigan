@@ -30,17 +30,49 @@ function p_Z = computePosteriorSlow(mus, Sigmas, pi, rho, X, d, K)
         pi_l = pi(logical(Z_n));
         % compute the posterior for the current state and observation
         p_Z(l, n) = log(rho(l)^d(n)) + log((1 - rho(l))^(1 - d(n)));
+        % DEBUG
+        if(!isreal(p_Z(l, n)))
+          more on
+          rho
+          pi_l(i)
+          log_p_x_n_i
+          p_Z_prev
+          p_Z(l, n)
+          l
+          n
+          i
+          more off
+          error('p_Z(l, n) is not real')
+        endif
         for i = 1:I
           log_p_x_n_i = logmvnpdf(X(:, i, n), mus_l(:, i), Sigmas_l(:, :, i));
+          p_Z_prev = p_Z(l, n);
           p_Z(l, n) = p_Z(l, n) + log(pi_l(i)) + log_p_x_n_i;
+          % DEBUG
+          if(isnan(p_Z(l, n)))
+            more on
+            rho
+            pi_l(i)
+            log_p_x_n_i
+            p_Z_prev
+            p_Z(l, n)
+            l
+            n
+            i
+            more off
+            error('p_Z(l, n) is not real')
+          endif
           % DEBUG
           if(!isreal(p_Z(l, n)))
             more on
             rho
             pi_l(i)
             log_p_x_n_i
+            p_Z_prev
+            p_Z(l, n)
             l
             n
+            i
             more off
             error('p_Z(l, n) is not real')
           endif
