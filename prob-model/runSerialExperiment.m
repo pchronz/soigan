@@ -35,7 +35,7 @@ function [baseline_correctness_serial, baseline_training_serial, baseline_predic
       disp('Bernoulli model prediction --- serial')
       tic()
       % Choose a random value and compare to rho.
-      bernoulli_correctness_serial(1, n + 1) = double(rand() > rho == d(n + 1));
+      bernoulli_correctness_serial(1, n + 1) = double(rand() > (1 - rho) == d(n + 1));
       elapsed = toc()
       bernoulli_prediction_serial(1, n + 1) = elapsed;
   endfor

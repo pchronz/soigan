@@ -7,26 +7,26 @@ N = size(svm_correctness_serial');
 % SVM
 % total rate/precision/recall/F-measure
 svm_hit_rate = zeros(4, N);
-for n = 2:N
+for n = min_N:N
   % get the values that count at all
-  valid_idxs = svm_correctness_serial(2:n) > -1;
+  valid_idxs = svm_correctness_serial(min_N:n) > -1;
   % count the hits
-  svm_hits = svm_correctness_serial(2:n) .* double(valid_idxs);
+  svm_hits = svm_correctness_serial(min_N:n) .* double(valid_idxs);
   if(sum(double(valid_idxs)) > 0)
     % Accuracy
-    svm_hit_rate(1, n) = sum(svm_hits)/(n - 1);
+    svm_hit_rate(1, n) = sum(svm_hits)/(n - min_N + 1);
     %svm_hit_rate(1, n) = sum(svm_hits)/sum(double(valid_idxs));
     % Precision
-    Z = sum(svm_hits .* !d(2:n)) + sum(!svm_hits(logical(d(2:n))));
+    Z = sum(svm_hits .* d(min_N:n)) + sum((!svm_hits(min_N:n)) .* (!d(min_N:n)));
     if(Z > 0)
-      svm_hit_rate(2, n) = sum(svm_hits .* !d(2:n))/Z;
+      svm_hit_rate(2, n) = sum(svm_hits .* d(min_N:n))/Z;
     else
       svm_hit_rate(2, n) = 0;
     endif
     % Recall
-    Z = sum(svm_hits .* !d(2:n)) + sum(!svm_hits(logical(!d(2:n))));
+    Z = sum(d(min_N:n));
     if(Z > 0)
-      svm_hit_rate(3, n) = sum(svm_hits .* !d(2:n))/Z;
+      svm_hit_rate(3, n) = sum(svm_hits .* d(min_N:n))/Z;
     else
       svm_hit_rate(3, n) = 0;
     endif
