@@ -141,7 +141,7 @@ function [mus, Sigmas, rho, pi] = learnExactIndependent(K, X, d, max_iter)
     tic()
     % rho
     for l = 1:K^I
-      rho(l) = p_Z(l, :) * d';
+      rho(l) = p_Z(l, :)*d';
     endfor
     sum_p_Z = sum(p_Z, 2);
     rho = rho ./ sum_p_Z;
@@ -154,6 +154,17 @@ function [mus, Sigmas, rho, pi] = learnExactIndependent(K, X, d, max_iter)
       d
       rho
       error('There are NaN entries in rho!')
+    endif
+    % Are there any vaules outstide [0, 1]?
+    idx = rho < 0;
+    if(any(idx))
+      rho(idx) = 0;
+      warning('There are sub-zero rhos: capped them.')
+    endif
+    idx = rho > 1;
+    if(any(idx))
+      rho(idx) = 1;
+      warning('There are rhos greater than 1.0: capped them.')
     endif
     toc()
     % pi, mus
