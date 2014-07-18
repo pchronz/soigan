@@ -262,7 +262,7 @@ function S = replaceSingularCovariance(Sigmas)
       for k = 1:K
         Sigma_ki = Sigmas(:, :, k, i);
         % Sometimes numerical instabilities lead to non-symmetric covariance matrices.
-        if(!issymmetric(Sigma_ki, eps))
+        if(!issymmetric(Sigma_ki))
           save temp.mat Sigma_ki;
           Sigma_ki
           k

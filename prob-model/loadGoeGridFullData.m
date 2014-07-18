@@ -1,8 +1,6 @@
-function [X, d] = loadGoeGridFullData(delay, max_n)
+function [X, d] = loadGoeGridFullData(delay, max_N)
   goe = dlmread('data/goegrid/goegrid.csv', ',', 1, 1);
   [N, foo] = size(goe);
-  N = max(N, max_N);
-  goe = goe(1:N, :);
   % re-align the monitoring values with the targets
   Idx = 1:N;
   d_start = Idx(logical(goe(:, end)))(1);
@@ -13,6 +11,8 @@ function [X, d] = loadGoeGridFullData(delay, max_n)
   % remove all rows with NaNs throughout all data sets
   goe_nan_lines = sum(isnan(goe), 2) > 0;
   goe(goe_nan_lines, :) = [];
+  % Retain only the first max_N entires;
+  goe = goe(1:max_N, :);
   % split the whole data set into the subsets for all machines
   goe1 = goe(:, 3:8);
   goe2 = goe(:, 10:15);
