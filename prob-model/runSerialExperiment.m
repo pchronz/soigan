@@ -94,6 +94,12 @@ function [baseline_correctness_serial, baseline_training_serial, baseline_predic
   % baseline & prob model
   %for n = max_K:N - 1
   last_training = 0;
+  % Dimensions to use for the full probabilistic model.
+  dims = linspace(1, I, I);
+  tic()
+  disp('Running dimensionality reduction')
+  dims = reduceDimensions(X, d);
+  toc()
   for n = min_N:N - 1
     for K = min_K:max_K
       disp('n -- serial')
@@ -121,13 +127,13 @@ function [baseline_correctness_serial, baseline_training_serial, baseline_predic
       if(last_training == 0 || (n - last_training) >= refresh_rate)
         disp('Multi-mixture model training --- serial')
         tic()
-        [mus, Sigmas, rho, pi] = learnExactIndependent(K, X_tr, d_tr, 10);
+        [mus, Sigmas, rho, pi] = learnExactIndependent(K, X_tr(:, dims, :), d_tr, 10);
         elapsed = toc()
       endif
       prob_model_training_serial(K, n + 1) = elapsed;
       disp('Multi-mixture model prediction --- serial')
       tic()
-      [p_0, p_1] = predictExactIndependent(X(:, :, n + 1), mus, Sigmas, rho, pi);
+      [p_0, p_1] = predictExactIndependent(X(:, dims, n + 1), mus, Sigmas, rho, pi);
       elapsed = toc()
       prob_model_prediction_serial(K, n + 1) = elapsed;
       prob_model_correctness_serial(K, n + 1) = double((p_0 < p_1) == d(n + 1));

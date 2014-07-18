@@ -11,8 +11,9 @@ function [X, d] = loadGoeGridFullData(delay, max_N)
   % remove all rows with NaNs throughout all data sets
   goe_nan_lines = sum(isnan(goe), 2) > 0;
   goe(goe_nan_lines, :) = [];
+  [N, foo] = size(goe);
   % Retain only the first max_N entires;
-  goe = goe(1:max_N, :);
+  goe = goe(1:min(max_N, N), :);
   % split the whole data set into the subsets for all machines
   goe1 = goe(:, 3:8);
   goe2 = goe(:, 10:15);
