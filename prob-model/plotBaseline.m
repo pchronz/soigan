@@ -14,15 +14,17 @@ for K = [2:max_K]
     % Accuracy
     baseline_hit_rate(K, n, 1) = sum(baseline_correctness_serial(K, min_N:n))/(n - min_N + 1);
     % Precision
-    Z = sum(baseline_correctness_serial(K, logical(d(min_N:n)))) + sum((!baseline_correctness_serial(K, min_N:n)) .* !d(min_N:n));
+    tp = sum(baseline_correctness_serial(K, min_N:n) .* d(min_N:n));
+    fp = sum((!baseline_correctness_serial(K, min_N:n)) .* !d(min_N:n));
+    Z = tp + fp;
     if(Z > 0)
-      baseline_hit_rate(K, n, 2) = sum(baseline_correctness_serial(K, logical(d(min_N:n)))) / Z;
+      baseline_hit_rate(K, n, 2) = tp/Z;
     else
       baseline_hit_rate(K, n, 2) = 0;
     endif
     % Recall
     if(sum(d(min_N:n)) > 0)
-      baseline_hit_rate(K, n, 3) = sum(baseline_correctness_serial(K, logical(d(min_N:n)))) / sum(d(min_N:n));
+      baseline_hit_rate(K, n, 3) = tp/sum(d(min_N:n));
     else
       baseline_hit_rate(K, n, 3) = 0;
     endif

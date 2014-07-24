@@ -17,7 +17,7 @@ for n = min_N:N
     svm_hit_rate(1, n) = sum(svm_hits)/(n - min_N + 1);
     %svm_hit_rate(1, n) = sum(svm_hits)/sum(double(valid_idxs));
     % Precision
-    Z = sum(svm_hits .* d(min_N:n)) + sum((!svm_hits(min_N:n)) .* (!d(min_N:n)));
+    Z = sum(svm_hits .* d(min_N:n)) + sum((!svm_hits) .* (!d(min_N:n)));
     if(Z > 0)
       svm_hit_rate(2, n) = sum(svm_hits .* d(min_N:n))/Z;
     else

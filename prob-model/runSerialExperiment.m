@@ -112,14 +112,14 @@ function [baseline_correctness_serial, baseline_training_serial, baseline_predic
       if(last_training == 0 || (n - last_training) >= refresh_rate)
         disp('Baseline model training --- serial')
         tic()
-        [centers, rho_base] = learnBaselineModel(K, X_tr, d_tr);
+        [centers, rho_base] = learnBaselineModel(K, X_tr(:, dims, :), d_tr);
         elapsed = toc()
         baseline_training_serial(K, n + 1) = elapsed;
       endif
       % predict baseline
       disp('Baseline model prediction --- serial')
       tic()
-      [p_0, p_1] = predictBaseline(X(:, :, n + 1), centers, rho_base);
+      [p_0, p_1] = predictBaseline(X(:, dims, n + 1), centers, rho_base);
       elapsed = toc()
       baseline_prediction_serial(K, n + 1) = elapsed;
       baseline_correctness_serial(K, n + 1) = double((p_0 < p_1) == d(n + 1));
@@ -146,8 +146,12 @@ function [baseline_correctness_serial, baseline_training_serial, baseline_predic
       endif
 
       % better save than sorry
-      save experimentResultsSerial.mat d max_K baseline_correctness_serial baseline_training_serial baseline_prediction_serial prob_model_correctness_serial prob_model_training_serial prob_model_prediction_serial svm_correctness_serial svm_training_serial svm_prediction_serial bernoulli_correctness_serial bernoulli_training_serial bernoulli_prediction_serial min_N
-      disp('The serial results have been saved')
+      try
+        save experimentResultsSerial.mat d max_K baseline_correctness_serial baseline_training_serial baseline_prediction_serial prob_model_correctness_serial prob_model_training_serial prob_model_prediction_serial svm_correctness_serial svm_training_serial svm_prediction_serial bernoulli_correctness_serial bernoulli_training_serial bernoulli_prediction_serial min_N
+        disp('The serial results have been saved')
+      catch
+        error(last_error())
+      end_try_catch
 
     endfor
   endfor
@@ -165,3 +169,4 @@ function [baseline_correctness_serial, baseline_training_serial, baseline_predic
   bernoulli_training_serial
   bernoulli_prediction_serial
 endfunction
+
