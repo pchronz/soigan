@@ -98,7 +98,8 @@ function [baseline_correctness_serial, baseline_training_serial, baseline_predic
   dims = linspace(1, I, I);
   tic()
   disp('Running dimensionality reduction')
-  dims = reduceDimensions(X, d);
+  % TODO XXX cross reduction needs to happen with each run to make it realistic.
+  dims = crossReduceDimensions(X, d);
   toc()
   for n = min_N:N - 1
     for K = min_K:max_K
