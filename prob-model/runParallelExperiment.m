@@ -1,4 +1,4 @@
-function [baseline_accuracy, prob_accuracy, svm_accuracy, baseline_learning, prob_learning, svm_learning, baseline_prediction, prob_prediction, svm_prediction] = runParallelExperiment(X, d, Delay, It, min_K, max_K)
+function [baseline_accuracy, prob_accuracy, svm_accuracy, baseline_learning, prob_learning, svm_learning, baseline_prediction, prob_prediction, svm_prediction] = runParallelExperiment(X, d, Delay, It, max_K)
 
   % PARALLEL EXPERIMENT
 
@@ -70,7 +70,7 @@ function [baseline_accuracy, prob_accuracy, svm_accuracy, baseline_learning, pro
       [X, d] = balanceData(X, d);
 
       % run multiple values of K on the same data
-      for K = min_K:max_K
+      for K = 2:max_K
         disp('Baseline model training --- parallel')
         tic()
         [centers, rho_base] = learnBaselineModel(K, X, d);

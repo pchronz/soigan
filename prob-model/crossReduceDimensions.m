@@ -1,3 +1,4 @@
+% TODO Make sure that this function does not terminate the program if there are too few data points of each type when balancing.
 function dims = crossReduceDimensions(X, d)
   S = 10;
   % Less-frequent target value.
@@ -31,6 +32,9 @@ function dims = reduceDimensions(X, d)
 
   % Split the data into training and test set.
   [X_tr, d_tr, X_test, d_test] = splitData(X, d, 0.8);
+  if(sum(d_tr) == 0 || sum(abs(d_tr - 1)) == 0)
+    warn('Cannot balance the training data, because one label is not available.')
+  endif
   % Balance the training set.
   [X_tr, d_tr] = balanceData(X_tr, d_tr);
   % Evaluate the SVM: train, test, and calculate the metrics.
@@ -99,7 +103,8 @@ function [X_tr, d_tr, X_test, d_test] = splitData(X, d, ratio)
   idx_1 = (1:N)(flags_1);
   % 0s first
   idx = 0;
-  while(sum(idx) == 0)
+  assert(sum(flags_0) >= 2)
+  while(sum(idx) == 0 || sum(idx) == length(flags_0))
     idx = unidrnd(10, 1, sum(flags_0));
     idx = idx < 10*ratio;
   endwhile
@@ -107,7 +112,8 @@ function [X_tr, d_tr, X_test, d_test] = splitData(X, d, ratio)
   idx_0_train = idx_0(!idx);
   % 1s second
   idx = 0;
-  while(sum(idx) == 0)
+  assert(sum(flags_1) >= 2)
+  while(sum(idx) == 0 || sum(idx) == length(flags_1))
     idx = unidrnd(10, 1, sum(flags_1));
     idx = idx < 8;
   endwhile
@@ -139,13 +145,25 @@ function [accuracy, precision, recall, F_measure] = calculateQuality(hits_svm, d
   tp = sum(hits_svm .* d_test);
   fp = sum((!hits_svm) .* (!d_test));
   % Accuracy
-  accuracy = sum(hits_svm)/length(hits_svm);
+  accuracy = 0;
+  if(length(hits_svm) != 0)
+    accuracy = sum(hits_svm)/length(hits_svm);
+  endif
   % Precision
-  precision = tp/(tp + fp);
+  precision = 0;
+  if(tp + fp != 0)
+    precision = tp/(tp + fp);
+  endif
   % Recall
-  recall = tp/sum(d_test);
+  recall = 0;
+  if(sum(d_test) != 0)
+    recall = tp/sum(d_test);
+  endif
   % F-Measure
-  F_measure = 2*precision*recall/(precision + recall);
+  F_measure = 0;
+  if(precision + recall != 0)
+    F_measure = 2*precision*recall/(precision + recall);
+  endif
 endfunction
 
 function [accuracy, precision, recall, F_measure] = evalSvm(X_tr, d_tr, X_test, d_test)
