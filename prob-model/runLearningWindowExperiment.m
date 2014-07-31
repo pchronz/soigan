@@ -55,12 +55,12 @@ function runLearningWindowExperiment()
   disp(['Running full prob model training for n = ' num2str(n)])
   [prob_train_full, prob_pred_full, prob_corr_full] = runProbModelExperiment(K, X, d, min_N, refresh_rate);
   disp('Computing quality for full probabilistic experiment')
-  [prec_prob_full, rec_prob_full, F_prob_full] = computeQuality([prob_corr_full], [d(n)], 1);
+  [prec_prob_full, rec_prob_full, F_prob_full] = computeQuality(prob_corr_full, d, min_N);
   % Train the full probabilistic model for a sample size of n and a window of win_len.
   disp(['Running full prob model training for n = ' num2str(n) ' and a window with win_len = ' num2str(win_len)])
   [prob_train_win, prob_pred_win, prob_corr_win] = runProbModelExperiment(K, X, d, min_N, refresh_rate, win_len);
   disp('Computing quality for windowed probabilistic experiment')
-  [prec_prob_win, rec_prob_win, F_prob_win] = computeQuality([prob_corr_full], [d(n)], 1);
+  [prec_prob_win, rec_prob_win, F_prob_win] = computeQuality(prob_corr_full, d, min_N);
   % Compare the performance of the windowed and non-windowed run: duration of training, duration of prediction, and F-measure.
 
   % Plot
