@@ -64,7 +64,12 @@ function runLearningWindowExperiment()
   % Compare the performance of the windowed and non-windowed run: duration of training, duration of prediction, and F-measure.
 
   % Plot
+  disp('Plotting')
   subplot(3, 1, 1)
+  size(F)
+  size(F_win)
+  size(F_prob_full)
+  size(F_prob_win)
   plot([F; F_win; F_prob_full; F_prob_win]')
   F_prob_win
   F_prob_full
