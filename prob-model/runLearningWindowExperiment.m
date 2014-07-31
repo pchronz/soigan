@@ -71,12 +71,11 @@ function runLearningWindowExperiment()
   size(F_prob_full)
   size(F_prob_win)
   plot([F; F_win; F_prob_full; F_prob_win]')
-  F_prob_win
-  F_prob_full
   subplot(3, 1, 2)
   plot([prob_train_full; prob_train_win]')
   subplot(3, 1, 3)
   plot([prob_pred_full; prob_pred_win]')
+  save learning_window_results F F_win F_prob_win F_prob_full
 endfunction
 
 function [svm_training_serial, svm_prediction_serial, svm_correctness_serial] =  runSvmExperiment(min_N, X, d, refresh_rate, win_len = Inf)
