@@ -1,4 +1,4 @@
-function [baseline_correctness_serial, baseline_training_serial, baseline_prediction_serial, prob_model_correctness_serial, prob_model_training_serial, prob_model_prediction_serial, svm_correctness_serial, svm_training_serial, svm_prediction_serial] = runSerialExperiment(X, d, min_K, max_K, min_N, refresh_rate)
+function [baseline_correctness_serial, baseline_training_serial, baseline_prediction_serial, prob_model_correctness_serial, prob_model_training_serial, prob_model_prediction_serial, svm_correctness_serial, svm_training_serial, svm_prediction_serial] = runSerialExperiment(X, d, min_K, max_K, min_N, refresh_rate, win_len = Inf)
   % SERIAL EXPERIMENT
   [D, I, N] = size(X);
   % result containers
@@ -45,8 +45,9 @@ function [baseline_correctness_serial, baseline_training_serial, baseline_predic
   for n = min_N:N - 1
     n
 
-    X_tr = X(:, :, 1:n);
-    d_tr = d(1, 1:n);
+    win_n = max(1, n - win_len + 1);
+    X_tr = X(:, :, win_n:n);
+    d_tr = d(1, win_n:n);
     if(last_training == 0 || (n - last_training) >= refresh_rate)
       disp('SVM training')
       % learn SVM
@@ -94,12 +95,11 @@ function [baseline_correctness_serial, baseline_training_serial, baseline_predic
   % baseline & prob model
   %for n = max_K:N - 1
   last_training = 0;
-  % Dimensions to use for the full probabilistic model.
-  dims = linspace(1, I, I);
   tic()
   disp('Running dimensionality reduction')
   % TODO XXX cross reduction needs to happen with each run to make it realistic.
-  dims = crossReduceDimensions(X, d);
+  [services, dims] = crossReduceDimensions(X, d, 3);
+  X_red = extractReducedData(X, services, dims);
   toc()
   for n = min_N:N - 1
     for K = min_K:max_K
@@ -108,19 +108,20 @@ function [baseline_correctness_serial, baseline_training_serial, baseline_predic
       disp('K -- serial')
       disp([num2str(K), '/', num2str(max_K), ' = ', num2str(K/max_K)*100, '%'])
       % TODO What happens if we balance the data set first as for the SVM?
-      X_tr = X(:, :, 1:n);
-      d_tr = d(1, 1:n);
+      win_n = max(1, n - win_len + 1);
+      X_tr = X_red(:, :, win_n:n);
+      d_tr = d(1, win_n:n);
       if(last_training == 0 || (n - last_training) >= refresh_rate)
         disp('Baseline model training --- serial')
         tic()
-        [centers, rho_base] = learnBaselineModel(K, X_tr(:, dims, :), d_tr);
+        [centers, rho_base] = learnBaselineModel(K, X_tr, d_tr);
         elapsed = toc()
         baseline_training_serial(K, n + 1) = elapsed;
       endif
       % predict baseline
       disp('Baseline model prediction --- serial')
       tic()
-      [p_0, p_1] = predictBaseline(X(:, dims, n + 1), centers, rho_base);
+      [p_0, p_1] = predictBaseline(X_red(:, :, n + 1), centers, rho_base);
       elapsed = toc()
       baseline_prediction_serial(K, n + 1) = elapsed;
       baseline_correctness_serial(K, n + 1) = double((p_0 < p_1) == d(n + 1));
@@ -128,13 +129,13 @@ function [baseline_correctness_serial, baseline_training_serial, baseline_predic
       if(last_training == 0 || (n - last_training) >= refresh_rate)
         disp('Multi-mixture model training --- serial')
         tic()
-        [mus, Sigmas, rho, pi] = learnExactIndependent(K, X_tr(:, dims, :), d_tr, 10);
+        [mus, Sigmas, rho, pi] = learnExactIndependent(K, X_tr, d_tr, 10);
         elapsed = toc()
       endif
       prob_model_training_serial(K, n + 1) = elapsed;
       disp('Multi-mixture model prediction --- serial')
       tic()
-      [p_0, p_1] = predictExactIndependent(X(:, dims, n + 1), mus, Sigmas, rho, pi);
+      [p_0, p_1] = predictExactIndependent(X_red(:, :, n + 1), mus, Sigmas, rho, pi);
       elapsed = toc()
       prob_model_prediction_serial(K, n + 1) = elapsed;
       prob_model_correctness_serial(K, n + 1) = double((p_0 < p_1) == d(n + 1));

@@ -67,7 +67,8 @@ function [mus, Sigmas, rho, pi] = learnExactIndependent(K, X, d, max_iter)
     tic()
     disp('Computing posterior...')
     %p_Z = computePosterior(mus, Sigmas, pi, rho, X, d, K);
-    p_Z = computePosteriorSlow(mus, Sigmas, pi, rho, X, d, K);
+    %p_Z = computePosteriorSlow(mus, Sigmas, pi, rho, X, d, K);
+    p_Z = computePosteriorVectorized(mus, Sigmas, pi, rho, X, d, K);
     disp('Normalizing...')
     if(sum(sum(p_Z < 0)))
       more on
