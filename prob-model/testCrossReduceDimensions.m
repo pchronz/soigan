@@ -6,7 +6,7 @@ pkg load parallel
 
 [X, d] = loadGoeGridFullData(0, 500);
 tic()
-[services, dims] = crossReduceDimensions(X, d, max(8, nproc()));
+[services, dims] = crossReduceDimensions(X, d, 8);
 toc()
 
 X_red = extractReducedData(X, services, dims);

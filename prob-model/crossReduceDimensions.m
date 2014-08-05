@@ -11,7 +11,7 @@ function [services, dims] = crossReduceDimensions(X, d, S)
   % Use the union from all runs as the required dimensionality.
 
   % XXX Quick fix: just run the dimensionality reduction with random data splitting multiple times and use union to get the final dimensions.
-  services = pararrayfun(nproc(), createReduceServices(X, d), 1:S, 'UniformOutput', false);
+  services = arrayfun(createReduceServices(X, d), 1:S, 'UniformOutput', false);
   % Reduce using union
   services = unique(cell2mat(services));
   %services = [];
@@ -25,7 +25,7 @@ function [services, dims] = crossReduceDimensions(X, d, S)
   % Now reduce the dimensions of the remaining data set.
   % Run cross-validation
   [D, I, N] = size(X);
-  dims = pararrayfun(nproc(), createReduceDimensions(X(:, services, :), d), 1:S, 'UniformOutput', false);
+  dims = arrayfun(createReduceDimensions(X(:, services, :), d), 1:S, 'UniformOutput', false);
   % Reduce dims via or
   dims = cumsum(reshape(cell2mat(dims), D, length(services), S), 3)(:, :, end) > 0;
   dims
@@ -112,6 +112,7 @@ endfunction
 
 function f = createReduceServices(X, d)
   f = @(s) reduceServices(X, d, s);
+  disp('function created')
 endfunction
 
 function services = reduceServices(X, d, s)
