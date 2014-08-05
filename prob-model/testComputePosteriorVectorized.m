@@ -20,21 +20,13 @@ d = binornd(ones(1, N), 0.5);
 % Before optimization (D, I, K, N) = (5, 5, 2, 200) --> ~= 13s.
 % Moving memory allocation out of the loops cut it down to ~= 6.5s.
 % Vectorization of mvnpdf got it down to ~= 5.3s.
-profile on
 tic()
 p_Z_vec = computePosteriorVectorized(mus, Sigmas, pi, rho, X, d, K);
 toc()
-profile off
-p = profile('info');
-profshow(p)
 
-profile on
 tic()
 p_Z_slo = computePosteriorSlow(mus, Sigmas, pi, rho, X, d, K);
 toc()
-profile off
-p = profile('info');
-profshow(p)
 
 mean(mean(abs(p_Z_slo - p_Z_vec)))
 

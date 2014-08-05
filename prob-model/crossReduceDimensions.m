@@ -11,21 +11,29 @@ function [services, dims] = crossReduceDimensions(X, d, S)
   % Use the union from all runs as the required dimensionality.
 
   % XXX Quick fix: just run the dimensionality reduction with random data splitting multiple times and use union to get the final dimensions.
-  services = [];
-  for i =1:S
-    services = union(services, reduceServices(X, d));
-    services
-  endfor
+  services = pararrayfun(nproc(), createReduceServices(X, d), 1:S, 'UniformOutput', false);
+  % Reduce using union
+  services = unique(cell2mat(services));
+  %services = [];
+  %for i =1:S
+  %  services = union(services, reduceServices(X, d));
+  %  services
+  %endfor
   disp('Keeping services...')
   services
 
   % Now reduce the dimensions of the remaining data set.
   % Run cross-validation
   [D, I, N] = size(X);
-  dims = zeros(D, length(services));
-  for i = 1:S
-    dims = or(dims, reduceDimensions(X(:, services, :), d));
-  endfor
+  dims = pararrayfun(nproc(), createReduceDimensions(X(:, services, :), d), 1:S, 'UniformOutput', false);
+  % Reduce dims via or
+  dims = cumsum(reshape(cell2mat(dims), D, length(services), S), 3)(:, :, end) > 0;
+  dims
+  %dims = cell2mat(dims)
+  %dims = zeros(D, length(services));
+  %for i = 1:S
+  %  dims = or(dims, reduceDimensions(X(:, services, :), d));
+  %endfor
   % After collecting the required dimensions, fill all services up to the same length.
   max_dim = max(sum(dims));
   % Go through all services and add dimensions at random to obtain max_dim dimensions.
@@ -42,7 +50,11 @@ function [services, dims] = crossReduceDimensions(X, d, S)
   dims
 end
 
-function dims = reduceDimensions(X, d)
+function f = createReduceDimensions(X, d)
+  f = @(s) reduceDimensions(X, d, s);
+endfunction
+
+function dims = reduceDimensions(X, d, s)
   [D, I, N] = size(X);
   % Quality metrics for each iteration.
   F = zeros(D*I, 1);
@@ -89,7 +101,7 @@ function dims = reduceDimensions(X, d)
   % First get the depth with the best result.
   [q_best, d_best] = max(F);
   % Get the depths that are greater than d_best at which the results are acceptable.
-  q_min = q_best*(1 - 1/30);
+  q_min = q_best*(1 - 1/50);
   F_ = F(d_best:end);
   % Choose the greatest acceptable detph.
   d_deepest = max((d_best:D*I)(F_ >= q_min));
@@ -98,7 +110,11 @@ function dims = reduceDimensions(X, d)
   dims = reshape(Ds(d_deepest, :), [D, I]);
 endfunction
 
-function services = reduceServices(X, d)
+function f = createReduceServices(X, d)
+  f = @(s) reduceServices(X, d, s);
+endfunction
+
+function services = reduceServices(X, d, s)
   [D, I, N] = size(X);
 
   % Quality metrics for each iteration. The first value corresponds to the full data set.
@@ -166,7 +182,7 @@ function services = reduceServices(X, d)
   % First get the depth with the best result.
   [q_best, d_best] = max(F);
   % Get the depths that are greater than d_best at which the results are acceptable.
-  q_min = q_best*(1 - 1/30);
+  q_min = q_best*(1 - 1/50);
   F_ = F(d_best:end);
   % Choose the greatest acceptable detph.
   d_deepest = max((d_best:I)(F_ >= q_min));
