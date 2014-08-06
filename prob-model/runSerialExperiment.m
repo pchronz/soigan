@@ -98,7 +98,7 @@ function [baseline_correctness_serial, baseline_training_serial, baseline_predic
   tic()
   disp('Running dimensionality reduction')
   % TODO XXX cross reduction needs to happen with each run to make it realistic.
-  [services, dims] = crossReduceDimensions(X, d, 3);
+  [services, dims] = crossReduceDimensions(X, d, 10);
   X_red = extractReducedData(X, services, dims);
   toc()
   for n = min_N:N - 1
