@@ -5,7 +5,7 @@ function p_Z = computePosteriorVectorized(mus, Sigmas, pi, rho, X, d, K)
   % select the right mus; needed in the l-loop;
   X_c = reshape(mat2cell(X, D, I, ones(1, N)), N);
   d_c = mat2cell(d, 1, ones(1, N))';
-  p_Z = cell2mat(parcellfun(nproc(), createComputePosteriorN(D, K, I, mus, Sigmas, pi, rho), X_c, d_c, 'UniformOutput', false)');
+  p_Z = cell2mat(parcellfun(nproc(), createComputePosteriorN(D, K, I, mus, Sigmas, pi, rho), X_c, d_c, 'UniformOutput', false)', 'ErrorHandler', @(err) disp(err));
   %for n = 1:N
   %  p_Z(:, n) = arrayfun(createComputePosteriorGlobal(D, K, I, mus, Sigmas, pi, X(:, :, n), d(n)), [1:K^I]', rho);
   %endfor
