@@ -16,9 +16,9 @@ clear
 Delay = [0:0];
 It = 50;
 min_K = 2;
-max_K = 3;
+max_K = 2;
 min_N = 1000;
-max_N = 1100;
+max_N = Inf;
 refresh_rate = 100;
 
 global deter = false;
@@ -31,8 +31,8 @@ else
   disp('Preparing data set from scratch.')
   % N, I, R, D, K
   %[X, d] = createSyntheticData(max_N, 5, 3, 3, 3);
-  %[X, d] = loadEwsData(max_N);
-  [X, d] = loadGoeGridFullData(0, max_N);
+  [X, d] = loadEwsData(max_N);
+  %[X, d] = loadGoeGridFullData(0, max_N);
   save detdata.mat X d
 endif
 

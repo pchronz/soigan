@@ -112,7 +112,6 @@ endfunction
 
 function f = createReduceServices(X, d)
   f = @(s) reduceServices(X, d, s);
-  disp('function created')
 endfunction
 
 function services = reduceServices(X, d, s)

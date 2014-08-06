@@ -36,6 +36,7 @@ function [X, d] = loadEwsData(N)
     mysql = mysql(1:N, :);
     ews = ews(1:N, :);
   endif
+  N = min(N, max_N);
 
   % Remove colinear dimensions.
   apache = cleanMetrics(apache);
