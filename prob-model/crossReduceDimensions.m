@@ -1,5 +1,6 @@
 % TODO Make sure that this function does not terminate the program if there are too few data points of each type when balancing.
 function [services, dims] = crossReduceDimensions(X, d, S)
+  assert(S > 1)
   % Less-frequent target value.
   d_less = 1;
   if(sum(d) > (length(d)/2))
@@ -11,7 +12,7 @@ function [services, dims] = crossReduceDimensions(X, d, S)
   % Use the union from all runs as the required dimensionality.
 
   % XXX Quick fix: just run the dimensionality reduction with random data splitting multiple times and use union to get the final dimensions.
-  services = arrayfun(createReduceServices(X, d), 1:S, 'UniformOutput', false);
+  services = arrayfun(createReduceServices(X, d, S), 1:S, 'UniformOutput', false);
   % Reduce using union
   services = unique(cell2mat(services));
   %services = [];
@@ -25,7 +26,7 @@ function [services, dims] = crossReduceDimensions(X, d, S)
   % Now reduce the dimensions of the remaining data set.
   % Run cross-validation
   [D, I, N] = size(X);
-  dims = arrayfun(createReduceDimensions(X(:, services, :), d), 1:S, 'UniformOutput', false);
+  dims = arrayfun(createReduceDimensions(X(:, services, :), d, S), 1:S, 'UniformOutput', false);
   % Reduce dims via or
   dims = cumsum(reshape(cell2mat(dims), D, length(services), S), 3)(:, :, end) > 0;
   dims
@@ -50,16 +51,17 @@ function [services, dims] = crossReduceDimensions(X, d, S)
   dims
 end
 
-function f = createReduceDimensions(X, d)
-  f = @(s) reduceDimensions(X, d, s);
+function f = createReduceDimensions(X, d, S)
+  f = @(s) reduceDimensions(X, d, s, S);
 endfunction
 
-function dims = reduceDimensions(X, d, s)
+function dims = reduceDimensions(X, d, s, S)
+  disp(['Reduce dimensions with s/S = ' num2str(s) '/' num2str(S)])
   [D, I, N] = size(X);
   % Quality metrics for each iteration.
   F = zeros(D*I, 1);
   % Split the data into training and test set.
-  [X_tr, d_tr, X_test, d_test] = splitData(X, d, 0.8);
+  [X_tr, d_tr, X_test, d_test] = splitDataCross(X, d, s, S);
   if(sum(d_tr) == 0 || sum(abs(d_tr - 1)) == 0)
     warn('Cannot balance the training data, because one label is not available.')
   endif
@@ -110,11 +112,12 @@ function dims = reduceDimensions(X, d, s)
   dims = reshape(Ds(d_deepest, :), [D, I]);
 endfunction
 
-function f = createReduceServices(X, d)
-  f = @(s) reduceServices(X, d, s);
+function f = createReduceServices(X, d, S)
+  f = @(s) reduceServices(X, d, s, S);
 endfunction
 
-function services = reduceServices(X, d, s)
+function services = reduceServices(X, d, s, S)
+  disp(['Reduce services with s/S = ' num2str(s) '/' num2str(S)])
   [D, I, N] = size(X);
 
   % Quality metrics for each iteration. The first value corresponds to the full data set.
@@ -124,7 +127,7 @@ function services = reduceServices(X, d, s)
   F = zeros(I, 1);
 
   % Split the data into training and test set.
-  [X_tr, d_tr, X_test, d_test] = splitData(X, d, 0.8);
+  [X_tr, d_tr, X_test, d_test] = splitDataCross(X, d, s, S);
   if(sum(d_tr) == 0 || sum(abs(d_tr - 1)) == 0)
     warn('Cannot balance the training data, because one label is not available.')
   endif
@@ -192,7 +195,7 @@ function services = reduceServices(X, d, s)
   F
 endfunction
 
-function [X_tr, d_tr, X_test, d_test] = splitData(X, d, ratio)
+function [X_tr, d_tr, X_test, d_test] = splitDataRandom(X, d, ratio)
   [D, I, N] = size(X);
   % split the data into training and validation sets
   % first split the data by target classes
@@ -223,6 +226,38 @@ function [X_tr, d_tr, X_test, d_test] = splitData(X, d, ratio)
   d_test = d([idx_0_test, idx_1_test]);
   X_tr = X(:, :, [idx_0_train, idx_1_train]);
   d_tr = d([idx_0_train, idx_1_train]);
+endfunction
+
+function [X_tr, d_tr, X_test, d_test] = splitDataCross(X, d, s, S)
+  [D, I, N] = size(X);
+  % split the data into training and validation sets
+  % first split the data by target classes
+  flags_0 = (d == 0);
+  flags_1 = !flags_0;
+  idx_0 = (1:N)(flags_0);
+  idx_1 = (1:N)(flags_1);
+  % 0s first
+  assert(sum(flags_0) >= 2)
+  parts = partitionSet(idx_0, S);
+  idx_0_test = parts{s};
+  % Just deal with it.
+  idx_0_train_idx = [1:S];
+  idx_0_train_idx(s) = [];
+  idx_0_train = parts{idx_0_train_idx};
+  % 1s second
+  assert(sum(flags_1) >= 2)
+  parts = partitionSet(idx_1, S);
+  idx_1_test = parts{s};
+  % Just deal with it.
+  idx_1_train_idx = [1:S];
+  idx_1_train_idx(s) = [];
+  idx_1_train = parts{idx_1_train_idx};
+  % now assemble both into common training and test sets
+  X_test = X(:, :, [idx_0_test, idx_1_test]);
+  d_test = d([idx_0_test, idx_1_test]);
+  X_tr = X(:, :, [idx_0_train, idx_1_train]);
+  d_tr = d([idx_0_train, idx_1_train]);
+  
 endfunction
 
 function CC = trainSvm(X_tr, d_tr)
@@ -270,5 +305,24 @@ function [accuracy, precision, recall, F_measure] = evalSvm(X_tr, d_tr, X_test, 
   hits_svm = testSvm(X_test, d_test, CC);
   % Compute the baseline quality metrics: accuracy, precision, recall, F-measure.
   [accuracy, precision, recall, F_measure] = calculateQuality(hits_svm, d_test);
+endfunction
+
+function v_parts = partitionSet(v, S)
+  N = length(v);
+  min_els = floor(N/S);
+  rest_els = mod(N, S);
+  lens = min_els*ones(1, S);
+  lens(1:rest_els) = lens(1:rest_els) + 1;
+  lens = cumsum([0 lens]);
+  v_parts = cell(S);
+  for s = 1:S
+    v_parts(s) = v(lens(s) + 1:lens(s + 1));
+  endfor
+  % XXX Test
+  tot_len = 0;
+  for s = 1:S
+    tot_len = tot_len + length(v_parts{s});
+  endfor
+  assert(tot_len == length(v))
 endfunction
 

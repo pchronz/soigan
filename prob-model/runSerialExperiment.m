@@ -1,4 +1,4 @@
-function [baseline_correctness_serial, baseline_training_serial, baseline_prediction_serial, prob_model_correctness_serial, prob_model_training_serial, prob_model_prediction_serial, svm_correctness_serial, svm_training_serial, svm_prediction_serial] = runSerialExperiment(X, d, min_K, max_K, min_N, refresh_rate, win_len = Inf)
+function [baseline_correctness_serial, baseline_training_serial, baseline_prediction_serial, prob_model_correctness_serial, prob_model_training_serial, prob_model_prediction_serial, svm_correctness_serial, svm_training_serial, svm_prediction_serial] = runSerialExperiment(X, d, min_K, max_K, min_N, refresh_rate, win_len = Inf, cross_S = 10)
   % SERIAL EXPERIMENT
   [D, I, N] = size(X);
   % result containers
@@ -98,7 +98,7 @@ function [baseline_correctness_serial, baseline_training_serial, baseline_predic
   tic()
   disp('Running dimensionality reduction')
   % TODO XXX cross reduction needs to happen with each run to make it realistic.
-  [services, dims] = crossReduceDimensions(X, d, 10);
+  [services, dims] = crossReduceDimensions(X, d, cross_S);
   X_red = extractReducedData(X, services, dims);
   toc()
   for n = min_N:N - 1
@@ -129,7 +129,7 @@ function [baseline_correctness_serial, baseline_training_serial, baseline_predic
       if(last_training == 0 || (n - last_training) >= refresh_rate)
         disp('Multi-mixture model training --- serial')
         tic()
-        [mus, Sigmas, rho, pi] = learnExactIndependent(K, X_tr, d_tr, 10);
+        [mus, Sigmas, rho, pi] = learnExactIndependent(K, X_tr, d_tr, 30);
         elapsed = toc()
       endif
       prob_model_training_serial(K, n + 1) = elapsed;

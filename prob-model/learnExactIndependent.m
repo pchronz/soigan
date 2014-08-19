@@ -1,4 +1,4 @@
-function [mus, Sigmas, rho, pi] = learnExactIndependent(K, X, d, max_iter)
+function [mus, Sigmas, rho, pi] = learnExactIndependent(K, X, d, max_iter = 20)
   global deter;
   disp('Init tic')
   tic()
