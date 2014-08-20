@@ -14,11 +14,11 @@ Delay = [0:0];
 It = 50;
 min_K = 2;
 max_K = 2;
-min_N = 1;
-max_N = 200;
+min_N = 100;
+max_N = 250;
 refresh_rate = 100;
 win_len = 1000;
-cross_S = 10;
+cross_S = 2;
 
 global deter = false;
 X = 0;

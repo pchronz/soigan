@@ -59,7 +59,7 @@ endfunction
 
 function p_Z_n = computePosteriorGlobal(D, K, I, pi, X_n, d_n, l, rho)
   % DEBUG
-  disp('compute posterior global')
+  %disp('compute posterior global')
   [Z_n, z] = dec2oneOfK(l, K, I);
   % z_idx = (base2dec(z(1, :)', K)) + 1;
   for i = 1:I
@@ -71,13 +71,13 @@ function p_Z_n = computePosteriorGlobal(D, K, I, pi, X_n, d_n, l, rho)
   %mus_m = cell2mat(cellfun('selectmus', mat2cell(z_idx, ones(1, I)), reshape(mat2cell(mus, D, K, ones(1, I)), I, 1), 'UniformOutput', false)');
   global mus
   % DEBUG
-  disp('selecting mus')
+  %disp('selecting mus')
   for i = 1:I
     mus_l(:, i) = mus(:, z_idx(i), i);
   endfor
   % select the right Sigmas
   % DEBUG
-  disp('selecting Sigmas and computing logdet and inv')
+  %disp('selecting Sigmas and computing logdet and inv')
   global logDetSigmas
   logDetSigmas_c = cell(1, I);
   global invSigmas
@@ -110,7 +110,7 @@ function p_Z_n = computePosteriorGlobal(D, K, I, pi, X_n, d_n, l, rho)
   %Sigmas_c = reshape(mat2cell(Sigmas_l, D, D, ones(1, I)), 1, I);
   %log_p_x_n_is = cellfun('logmvnpdf', X_c, mus_c, Sigmas_c);
   % DEBUG
-  disp('about to run logmvnpdflazy as cellfun')
+  %disp('about to run logmvnpdflazy as cellfun')
   log_p_x_n_is = cellfun('logmvnpdflazy', X_c, mus_c, logDetSigmas_c, invSigmas_c);
   p_Z_n = p_Z_n + sum(log(pi_l)) + sum(log_p_x_n_is);
   % DEBUG
@@ -125,13 +125,13 @@ function p_Z_n = computePosteriorGlobal(D, K, I, pi, X_n, d_n, l, rho)
     error('p_Z(l, n) is not real')
   endif
   % DEBUG
-  disp('compute posterior global done')
+  %disp('compute posterior global done')
 endfunction
 
 % Partial application to avoid repeating most arguments K^I times.
 function f = createComputePosteriorGlobal(D, K, I, pi, X_n, d_n)
   % DEBUG
-  disp('creating posterior global function')
+  %disp('creating posterior global function')
   f = @(l, rho) computePosteriorGlobal(D, K, I, pi, X_n, d_n, l, rho);
 endfunction
 
@@ -141,7 +141,7 @@ function p_Z_n = computePosteriorN(X_n, d_n)
   global pi
   global rho
   % DEBUG
-  disp('about to run arrayfun in computePosteriorN')
+  %disp('about to run arrayfun in computePosteriorN')
   p_Z_n = arrayfun(createComputePosteriorGlobal(D, K, I, pi, X_n, d_n), [1:K^I]', rho);
 endfunction
 

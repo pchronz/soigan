@@ -6,9 +6,9 @@ pkg load nan
 pkg load parallel
 
 D = 5;
-I = 3;
-K = 2;
-N = 250;
+I = 5;
+K = 3;
+N = 100;
 
 mus = rand(D, K, I);
 Sigmas = eye(D)(:, :, ones(1, K), ones(1, I));
@@ -25,8 +25,13 @@ p_Z_vec = computePosteriorVectorized(mus, Sigmas, pi, rho, X, d, K);
 toc()
 
 tic()
-p_Z_slo = computePosteriorSlow(mus, Sigmas, pi, rho, X, d, K);
+[mus, pi] = maxMuPi(p_Z_vec, X, K);
 toc()
 
-mean(mean(abs(p_Z_slo - p_Z_vec)))
+tic()
+[mus_vec, pi_vec] = maxMuPiVectorized(p_Z_vec, X, K);
+toc()
+
+mean(mean(mean(mus - mus_vec)))
+mean(mean(pi - pi_vec))
 

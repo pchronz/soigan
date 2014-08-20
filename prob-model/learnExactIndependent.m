@@ -177,32 +177,12 @@ function [mus, Sigmas, rho, pi] = learnExactIndependent(K, X, d, max_iter = 20)
       sum(pi)
       error('pi does not sum to one after maximization')
     endif
-    % toc()
-    % tic()
-    % pi = pi .* 0;
-    % mus = mus .* 0;
-    % for i = 1:I
-    %   for k = 1:K
-    %     % mus
-    %     mu_norm = 0;
-    %     for n = 1:N
-    %       for l = 1:K^I
-    %         [Z_n, z] = dec2oneOfK(l, K, I);
-    %         % pi
-    %         pi(k, i) = pi(k, i) + Z_n(k, i) * p_Z(l, n);
-    %         % mus
-    %         mus(:, k, i) = mus(:, k, i) + p_Z(l, n) * Z_n(k, i) * X(:, i, n);
-    %         mu_norm = mu_norm + p_Z(l, n) * Z_n(k, i);
-    %       endfor
-    %     endfor
-    %     % mus
-    %     mus(:, k, i) = mus(:, k, i) ./ mu_norm;
-    %   endfor
-    % endfor
-    % pi = pi ./ N;
-    % assert(pi_fast == pi);
-    % assert(abs(sum(sum(sum(mus_fast))) - sum(sum(sum(mus)))) < 0.0001);
     toc()
+    tic()
+    [mus_slow, pi_slow] = maxMuPiVectorized(p_Z, X, K);
+    toc()
+    assert(mus == mus_slow)
+    assert(pi == pi_slow)
     % XXX There is a data dependency between mus and Sigmas, so they cannot be integrated in the same loop
     % Sigmas
     disp('M-step Sigmas')
