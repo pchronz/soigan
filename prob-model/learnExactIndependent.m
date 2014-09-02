@@ -171,18 +171,13 @@ function [mus, Sigmas, rho, pi] = learnExactIndependent(K, X, d, max_iter = 20)
     % pi, mus
     disp('M-step pi, mus')
     tic()
-    [mus, pi] = maxMuPi(p_Z, X, K);
+    [mus, pi] = maxMuPiVectorized(p_Z, X, K);
     % Test whether the probabilities over the mixture components sum approximately to 1. 
     if(!(sum(sum(pi) >= 1.0001) == 0) || !(sum(sum(pi) <= 0.9999) == 0))
       sum(pi)
       error('pi does not sum to one after maximization')
     endif
     toc()
-    tic()
-    [mus_slow, pi_slow] = maxMuPiVectorized(p_Z, X, K);
-    toc()
-    assert(mus == mus_slow)
-    assert(pi == pi_slow)
     % XXX There is a data dependency between mus and Sigmas, so they cannot be integrated in the same loop
     % Sigmas
     disp('M-step Sigmas')
