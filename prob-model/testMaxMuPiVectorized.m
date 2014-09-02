@@ -6,9 +6,9 @@ pkg load nan
 pkg load parallel
 
 D = 5;
-I = 5;
+I = 6;
 K = 3;
-N = 100;
+N = 50;
 
 mus = rand(D, K, I);
 Sigmas = eye(D)(:, :, ones(1, K), ones(1, I));
