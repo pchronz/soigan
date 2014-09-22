@@ -27,7 +27,7 @@ function [baseline_correctness_serial, baseline_training_serial, baseline_predic
         disp('Bernoulli model training --- serial')
         tic()
         % TODO Try out setting rho to 0.5, which someone might do naively.
-        rho = sum(d(1, 1:n))/N;
+        rho = sum(d(1, 1:n))/n;
         elapsed = toc()
         bernoulli_training_serial(1, n + 1) = elapsed;
         last_training = n;
@@ -100,7 +100,8 @@ function [baseline_correctness_serial, baseline_training_serial, baseline_predic
   % TODO XXX cross reduction needs to happen with each run to make it realistic.
   [services, dims] = crossReduceDimensions(X, d, cross_S);
   X_red = extractReducedData(X, services, dims);
-  toc()
+  cross_red_time = toc()
+  save experimentResultsSerialCrossReductionTime.mat cross_red_time
   for n = min_N:N - 1
     for K = min_K:max_K
       disp('n -- serial')
@@ -150,6 +151,7 @@ function [baseline_correctness_serial, baseline_training_serial, baseline_predic
       % better save than sorry
       try
         save experimentResultsSerial.mat d max_K baseline_correctness_serial baseline_training_serial baseline_prediction_serial prob_model_correctness_serial prob_model_training_serial prob_model_prediction_serial svm_correctness_serial svm_training_serial svm_prediction_serial bernoulli_correctness_serial bernoulli_training_serial bernoulli_prediction_serial min_N
+        save experimentResultsSerialRelevantServices.mat services dims
         disp('The serial results have been saved')
       catch
         error(last_error())

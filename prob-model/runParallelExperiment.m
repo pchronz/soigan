@@ -1,164 +1,195 @@
-function [baseline_accuracy, prob_accuracy, svm_accuracy, baseline_learning, prob_learning, svm_learning, baseline_prediction, prob_prediction, svm_prediction] = runParallelExperiment(X, d, Delay, It, max_K)
-
+function runParallelExperiment(X, d, min_K, max_K, S = 10)
+  disp('Starting the parallel experiment')
   % PARALLEL EXPERIMENT
+  [D, I, N] = size(X);
+  % result containers
+  baseline_correctness_parallel = zeros(max_K, N);
+  % TODO Store the amount of data points in each and the value of S
+  baseline_training_parallel = zeros(max_K, S);
+  baseline_prediction_parallel = zeros(max_K, S);
+  prob_model_correctness_parallel = zeros(max_K, N);
+  prob_model_training_parallel = zeros(max_K, S);
+  prob_model_prediction_parallel = zeros(max_K, S);
+  svm_correctness_parallel = zeros(1, N);
+  svm_training_parallel = zeros(1, S);
+  svm_prediction_parallel = zeros(1, S);
+  % (true value, predicted value) X predictions
+  bernoulli_correctness_parallel = zeros(2, S*(N - floor(N/S)));
+  bernoulli_training_parallel = zeros(1, S);
+  bernoulli_prediction_parallel = zeros(1, S);
 
-  % the experimental results
-  % accuracies
-  baseline_accuracy = zeros(length(Delay), It, max_K);
-  prob_accuracy = zeros(length(Delay), It, max_K);
-  svm_accuracy = zeros(length(Delay), It, max_K);
-  % learning times
-  baseline_learning = zeros(length(Delay), It, max_K);
-  prob_learning = zeros(length(Delay), It, max_K);
-  svm_learning = zeros(length(Delay), It, max_K);
-  % training times
-  baseline_prediction = zeros(length(Delay), It, max_K);
-  prob_prediction = zeros(length(Delay), It, max_K);
-  svm_prediction = zeros(length(Delay), It, max_K);
+  % Verify that we have a value for each class in the data set.
+  first_neg = min([1:N](d == 0));
+  first_pos = min([1:N](d == 1));
+  assert(!isempty(first_neg) && !isempty(first_pos))
 
-  % save the original data
-  X_orig = X;
-  d_orig = d;
+  % Index of the current position of the tests.
+  test_idx = 1;
 
-  for delay = Delay
-    disp('Delay...')
-    delay
+  for s = 1:S
+    [X_test, d_test, X_tr, d_tr] = splitDataCross(X, d, s, S);
 
-    for it = 1:It
-      disp('Experiment iteration...')
-      it
+    [t_train, t_pred, correctness] = runBernoulliParallelExperiment(d_tr, d_test, s, test_idx);
+    bernoulli_training_parallel(1, s) = t_train;
+    bernoulli_prediction_parallel(1, s) = t_pred;
+    bernoulli_correctness_parallel(:, test_idx:test_idx + length(d_test) - 1) = correctness;
+    
+    %last_training = 0;
+    %% SVM
+    %for n = min_N:N - 1
+    %  n
 
-      X = X_orig;
-      d = d_orig;
-      [D, I, N] = size(X);
-      % XXX uncomment to run on a smaller dataset for development
-      % N = 30;
-      % X = X(:, :, 1:N);
-      % d = d(1:N);
-      % assert(size(X) == [D, I, N])
-      % assert(size(d) == [1, N])
+    %  win_n = max(1, n - win_len + 1);
+    %  X_tr = X(:, :, win_n:n);
+    %  d_tr = d(1, win_n:n);
+    %  if(last_training == 0 || (n - last_training) >= refresh_rate)
+    %    disp('SVM training')
+    %    % learn SVM
+    %    tic()
+    %    MODE.TYPE='rbf';
+    %    MODE.hyperparameter.c_value=rand(1)*250;
+    %    MODE.hyperparameter.gamma=rand(1)/10000;
+    %    if(sum(d_tr) > 0 && sum(!d_tr) > 0)
+    %      [X_tr, d_tr] = balanceData(X_tr, d_tr);
+    %    endif
+    %    [D, I, N] = size(X_tr);
+    %    CC = train_sc(reshape(X_tr, [D*I, N])', (d_tr + 1)', MODE);
+    %    % XXX why does the SVM not work below a certain number of training vectors?
+    %    % ==> cause it ain't got more than one class observed!
+    %    elapsed = toc();
+    %    svm_training_parallel(n) = elapsed;
+    %    last_training = n;
+    %  endif
+    %  if(CC.model.totalSV > 0)
+    %    disp('SVM prediction')
+    %    % predict SVM
+    %    tic();
+    %    [D, I, N_te] = size(X(:, :, n + 1));
+    %    hits_svm = test_sc(CC, reshape(X(:, :, n + 1), [D*I, N_te])');
+    %    hits_svm = hits_svm.classlabel - 1;
+    %    hits_svm = sum(hits_svm == d(1, n + 1));
+    %    elapsed = toc();
+    %    svm_prediction_parallel(n) = elapsed;
+    %    assert(hits_svm == 0 || hits_svm == 1);
+    %    svm_correctness_parallel(n) = hits_svm;
+    %  else
+    %    % disp('SVM model failed at...')
+    %    % n
+    %    svm_training_parallel(n) = -1;
+    %    svm_correctness_parallel(n) = -1;
+    %    svm_prediction_parallel(n) = -1;
+    %  endif
+    %endfor
+    %[D, I, N] = size(X);
 
+    %% going one step ahead is fine as long as the time required for prediction and training
+    %% is less than the current time plus the time for which we wish to predict. Actually there
+    %% we also need to count in a slack that is the time until which the observed global value
+    %% (via Cern) will be available and the time that we need to react and fix an error (MTTR).
+    %% baseline & prob model
+    %%for n = max_K:N - 1
+    %last_training = 0;
+    %tic()
+    %disp('Running dimensionality reduction')
+    %% TODO XXX cross reduction needs to happen with each run to make it realistic.
+    %[services, dims] = S);
+    %X_red = extractReducedData(X, services, dims);
+    %cross_red_time = toc()
+    %save experimentResultsParallelCrossReductionTime.mat cross_red_time
+    %for n = min_N:N - 1
+    %  for K = min_K:max_K
+    %    disp('n -- parallel')
+    %    disp([num2str(n), '/', num2str(N - 1), ' = ', num2str(n/N)*100, '%'])
+    %    disp('K -- parallel')
+    %    disp([num2str(K), '/', num2str(max_K), ' = ', num2str(K/max_K)*100, '%'])
+    %    % TODO What happens if we balance the data set first as for the SVM?
+    %    win_n = max(1, n - win_len + 1);
+    %    X_tr = X_red(:, :, win_n:n);
+    %    d_tr = d(1, win_n:n);
+    %    if(last_training == 0 || (n - last_training) >= refresh_rate)
+    %      disp('Baseline model training --- parallel')
+    %      tic()
+    %      [centers, rho_base] = learnBaselineModel(K, X_tr, d_tr);
+    %      elapsed = toc()
+    %      baseline_training_parallel(K, n + 1) = elapsed;
+    %    endif
+    %    % predict baseline
+    %    disp('Baseline model prediction --- parallel')
+    %    tic()
+    %    [p_0, p_1] = predictBaseline(X_red(:, :, n + 1), centers, rho_base);
+    %    elapsed = toc()
+    %    baseline_prediction_parallel(K, n + 1) = elapsed;
+    %    baseline_correctness_parallel(K, n + 1) = double((p_0 < p_1) == d(n + 1));
 
-      % split the data into training and validation sets
-      % first split the data by target classes
-      flags_0 = (d == 0);
-      flags_1 = !flags_0;
-      idx_0 = (1:N)(flags_0);
-      idx_1 = (1:N)(flags_1);
-      % 0s first
-      idx = 0;
-      while(sum(idx) == 0)
-        idx = unidrnd(10, 1, sum(flags_0));
-        idx = idx < 8;
-      endwhile
-      idx_0_test = idx_0(idx);
-      idx_0_train = idx_0(!idx);
-      % 1s second
-      idx = 0;
-      while(sum(idx) == 0)
-        idx = unidrnd(10, 1, sum(flags_1));
-        idx = idx < 8;
-      endwhile
-      idx_1_test = idx_1(idx);
-      idx_1_train = idx_1(!idx);
-      % now assemble both into common training and test sets
-      X_test = X(:, :, [idx_0_test, idx_1_test]);
-      d_test = d([idx_0_test, idx_1_test]);
-      [X_test, d_test] = balanceData(X_test, d_test);
-      X = X(:, :, [idx_0_train, idx_1_train]);
-      d = d([idx_0_train, idx_1_train]);
-      [X, d] = balanceData(X, d);
+    %    if(last_training == 0 || (n - last_training) >= refresh_rate)
+    %      disp('Multi-mixture model training --- parallel')
+    %      tic()
+    %      [mus, Sigmas, rho, pi] = learnExactIndependent(K, X_tr, d_tr, 30);
+    %      elapsed = toc()
+    %    endif
+    %    prob_model_training_parallel(K, n + 1) = elapsed;
+    %    disp('Multi-mixture model prediction --- parallel')
+    %    tic()
+    %    [p_0, p_1] = predictExactIndependent(X_red(:, :, n + 1), mus, Sigmas, rho, pi);
+    %    elapsed = toc()
+    %    prob_model_prediction_parallel(K, n + 1) = elapsed;
+    %    prob_model_correctness_parallel(K, n + 1) = double((p_0 < p_1) == d(n + 1));
+    %    prob_model_correctness_parallel(K, 1:n + 1);
+    %    p_0
+    %    p_1
 
-      % run multiple values of K on the same data
-      for K = 2:max_K
-        disp('Baseline model training --- parallel')
-        tic()
-        [centers, rho_base] = learnBaselineModel(K, X, d);
-        elapsed = toc()
-        baseline_learning(delay - min(Delay) + 1, it, K) = elapsed;
+    %    if(last_training == 0 || (n - last_training) >= refresh_rate && K == max_K)
+    %      last_training = n;
+    %    endif
 
-        disp('SVM training --- parallel')
-        tic()
-        MODE.TYPE='rbf';
-        MODE.hyperparameter.c_value=rand(1)*250;
-        MODE.hyperparameter.gamma=rand(1)/10000;
-        [D, I, N_tr] = size(X);
-        CC = train_sc(reshape(X, [D*I, N_tr])', (d + 1)', MODE);
-        elapsed = toc()
-        svm_learning(delay - min(Delay) + 1, it, K) = elapsed;
+        % better save than sorry
 
-        % disp('Multi-mixture model training')
-        % tic()
-        % [mus, Sigmas, rho, pi] = learnExactIndependent(K, X, d, 10);
-        % elapsed = toc()
-        % prob_learning(delay - min(Delay) + 1, it, K) = elapsed;
+    % Update the position of our result pointer.
+    test_idx += length(d_test);
 
-        % evalute the Akaike information criterion
-        %aic = computeAicIndependent(mus, Sigmas, rho, pi, X, d);
-        %
-        %rho
-        %mus
-        %Sigmas
-        %pi
-        %aic
+    try
+      save experimentResultsParallel.mat d min_K max_K S bernoulli_correctness_parallel bernoulli_training_parallel bernoulli_prediction_parallel
+      save experimentResultsParallelRelevantServices.mat services dims
+      disp('The parallel results have been saved')
+    catch
+      error(last_error())
+    end_try_catch
 
-        N_test = size(X_test, 3);
-        hits = 0;
-        hits_baseline = 0;
+    %  endfor
+    %endfor
 
-        disp('Predictions prob model --- parallel')
-        tic()
-        for n = 1:N_test
-          %  [p_0, p_1] = predictExactIndependent(X_test(:, :, n), mus, Sigmas, rho, pi);
-          %  hits = hits + double((p_0 < p_1) == d_test(n));
-        endfor
-        elapsed = toc()
-        prob_prediction(delay - min(Delay) + 1, it, K) = elapsed;
-        disp('Predictions baseline model')
-        tic()
-        for n = 1:N_test
-          [p_0, p_1] = predictBaseline(X_test(:, :, n), centers, rho_base);
-          hits_baseline = hits_baseline + double((p_0 < p_1) == d_test(n));
-        endfor
-        elapsed = toc()
-        baseline_prediction(delay - min(Delay) + 1, it, K) = elapsed;
-        disp('Predictions SVM --- parallel')
-        tic()
-        [D, I, N_te] = size(X_test);
-        hits_svm = test_sc(CC, reshape(X_test, [D*I, N_te])');
-        hits_svm = hits_svm.classlabel - 1;
-        hits_svm = sum(hits_svm == d_test)
-        elapsed = toc()
-        svm_prediction(delay - min(Delay) + 1, it, K) = elapsed;
-
-        disp('prob model accuracy --- parallel');
-        hits / N_test
-        prob_accuracy(delay - min(Delay) + 1, it, K) = hits / N_test;
-        disp('baseline model accuracy --- parallel');
-        hits_baseline / N_test
-        baseline_accuracy(delay - min(Delay) + 1, it, K) = hits_baseline / N_test;
-        disp('SVM accuracy --- parallel');
-        hits_svm / N_test
-        svm_accuracy(delay - min(Delay) + 1, it, K) = hits_svm / N_test;
-      endfor
-    endfor
-
-    delay
-    disp('prob model mean and standard deviation')
-    mean(prob_accuracy(delay - min(Delay) + 1, :, :), 2)
-    std(prob_accuracy(delay - min(Delay) + 1, :, :), 0, 2)
-
-    disp('baseline model mean and standard deviation')
-    mean(baseline_accuracy(delay - min(Delay) + 1, :, :), 2)
-    std(baseline_accuracy(delay - min(Delay) + 1, :, :), 0, 2)
-
-    % better save than sorry
-    save experimentResultsParallel.mat It max_K Delay baseline_accuracy baseline_learning baseline_prediction prob_accuracy prob_learning prob_prediction svm_accuracy svm_learning svm_prediction
-    disp('The parallel results have been saved')
+    % Output the results
+    bernoulli_correctness_parallel(:, 1:test_idx - 1)
+    bernoulli_training_parallel(1, s)
+    bernoulli_prediction_parallel(1, s)
+    %baseline_correctness_parallel
+    %baseline_training_parallel
+    %baseline_prediction_parallel
+    %prob_model_correctness_parallel
+    %prob_model_training_parallel
+    %prob_model_prediction_parallel
+    %svm_correctness_parallel
+    %svm_training_parallel
+    %svm_prediction_parallel
   endfor
+  % Delete all unused entries in the results.
+  bernoulli_correctness_parallel(:, test_idx:end) = [];
+endfunction
 
-  baseline_accuracy
-
-  svm_accuracy
+function [t_train, t_pred, correctness] =  runBernoulliParallelExperiment(d_tr, d_test, s, test_idx)
+  % Bernoulli (max likelihood)
+  disp('Bernoulli model training --- parallel')
+  tic()
+  rho = sum(d_tr)/length(d_tr);
+  t_train = toc()
+  disp('Bernoulli model prediction --- parallel')
+  tic()
+  correctness = zeros(2, length(d_test));
+  for n = 1:length(d_test)
+    correctness(1, n) = d_test(n);
+    % Choose a random value and compare to rho.
+    correctness(2, n) = double(rand() > (1 - rho));
+  endfor
+  t_pred = toc()
 endfunction
 
