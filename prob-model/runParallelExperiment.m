@@ -148,8 +148,8 @@ function runParallelExperiment(X, d, min_K, max_K, S = 10)
     test_idx += length(d_test);
 
     try
-      save experimentResultsParallel.mat d min_K max_K S bernoulli_correctness_parallel bernoulli_training_parallel bernoulli_prediction_parallel
-      save experimentResultsParallelRelevantServices.mat services dims
+      save -V7 experimentResultsParallel.mat d min_K max_K S bernoulli_correctness_parallel bernoulli_training_parallel bernoulli_prediction_parallel
+      save -V7 experimentResultsParallelRelevantServices.mat services dims
       disp('The parallel results have been saved')
     catch
       error(last_error())
