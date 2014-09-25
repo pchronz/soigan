@@ -28,7 +28,7 @@ function runParallelExperiment(X, d, min_K, max_K, S = 10)
   test_idx = 1;
 
   for s = 1:S
-    [X_test, d_test, X_tr, d_tr] = splitDataCross(X, d, s, S);
+    [X_tr, d_tr, X_test, d_test] = splitDataCross(X, d, s, S);
 
     % Bernoulli
     disp('Bernoulli')
