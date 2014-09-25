@@ -39,7 +39,7 @@ function runParallelExperiment(X, d, min_K, max_K, S = 10)
   test_idx = 1;
 
   for s = 1:S
-    [X_tr, d_tr, X_test, d_test] = splitDataCross(X, d, s, S);
+    [X_tr, d_tr, X_test, d_test] = splitDataRand(X, d, 0.2);
 
     % Bernoulli
     disp('Bernoulli')
@@ -130,9 +130,9 @@ function runParallelExperiment(X, d, min_K, max_K, S = 10)
     svm_correctness_parallel(:, 1:test_idx - 1)
     svm_training_parallel(1, :)
     svm_prediction_parallel(1, :)
-    baseline_correctness_parallel(:, :, 1:test_idx - 1)
-    baseline_training_parallel(1, s)
-    baseline_prediction_parallel(1, s)
+    %baseline_correctness_parallel(:, :, 1:test_idx - 1)
+    %baseline_training_parallel(1, s)
+    %baseline_prediction_parallel(1, s)
     %prob_model_correctness_parallel
     %prob_model_training_parallel
     %prob_model_prediction_parallel
