@@ -17,6 +17,8 @@ function [X_tr, d_tr, X_test, d_test] = splitDataRand(X, d, p)
   idx_1_tr = idx_1(1:ceil(p*length(idx_1)))
   idx_1_test = idx_1(ceil(p*length(idx_1)) + 1:end)
   % now assemble both into common training and test sets
+  assert(length(intersect(idx_1_tr, idx_1_test)) == 0)
+  assert(length(intersect(idx_0_tr, idx_0_test)) == 0)
   X_test = X(:, :, [idx_0_test, idx_1_test]);
   d_test = d([idx_0_test, idx_1_test]);
   X_tr = X(:, :, [idx_0_tr, idx_1_tr]);
