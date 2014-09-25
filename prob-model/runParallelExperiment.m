@@ -50,32 +50,10 @@ function runParallelExperiment(X, d, min_K, max_K, S = 10)
     
     % SVM
     disp('SVM')
-    % learn SVM
-    tic()
-    MODE.TYPE='rbf';
-    MODE.hyperparameter.c_value=rand(1)*250;
-    MODE.hyperparameter.gamma=rand(1)/10000;
-    if(sum(d_tr) > 0 && sum(!d_tr) > 0)
-      [X_tr_bal, d_tr_bal] = balanceData(X_tr, d_tr);
-    endif
-    [D, I, N_bal] = size(X_tr_bal);
-    CC = train_sc(reshape(X_tr_bal, [D*I, N_bal])', (d_tr_bal + 1)', MODE);
-    svm_training_parallel(1, s) = toc();
-    if(CC.model.totalSV > 0)
-      % predict SVM
-      tic();
-      hits_svm = test_sc(CC, reshape(X_test, [D*I, size(X_test)(3)])');
-      hits_svm = hits_svm.classlabel - 1;
-      svm_prediction_parallel(1, s) = toc();
-      svm_correctness_parallel(1, test_idx:test_idx + length(d_test) - 1) = d_test;
-      svm_correctness_parallel(2, test_idx:test_idx + length(d_test) - 1) = hits_svm;
-      test_idx + length(d_test - 1)
-    else
-      warning('No support vectors during SVM training')
-      svm_training_parallel(1, s) = -1;
-      svm_prediction_parallel(1, s) = -1;
-      svm_correctness_parallel(1, test_idx:test_idx + length(d_test) - 1) = -1;
-    endif
+    [t_train, t_pred, correctness] = runSvmParallelExperiment(X_tr, d_tr, X_test, d_test, s, test_idx);
+    svm_training_parallel(1, s) = t_train;
+    svm_prediction_parallel(1, s) = t_pred;
+    svm_correctness_parallel(:, test_idx:test_idx + length(d_test) - 1) = correctness;
 
     %for K = min_K:max_K
     %  % TODO What happens if we balance the data set first as for the SVM?
@@ -167,5 +145,34 @@ function [t_train, t_pred, correctness] =  runBernoulliParallelExperiment(d_tr, 
     correctness(2, n) = double(rand() > (1 - rho));
   endfor
   t_pred = toc()
+endfunction
+
+function [t_train, t_pred, correctness] =  runSvmParallelExperiment(X_tr, d_tr, X_test, d_test, s, test_idx)
+    % learn SVM
+    tic()
+    MODE.TYPE='rbf';
+    MODE.hyperparameter.c_value=rand(1)*250;
+    MODE.hyperparameter.gamma=rand(1)/10000;
+    if(sum(d_tr) > 0 && sum(!d_tr) > 0)
+      [X_tr_bal, d_tr_bal] = balanceData(X_tr, d_tr);
+    endif
+    [D, I, N_bal] = size(X_tr_bal);
+    CC = train_sc(reshape(X_tr_bal, [D*I, N_bal])', (d_tr_bal + 1)', MODE);
+    t_train = toc();
+    if(CC.model.totalSV > 0)
+      % predict SVM
+      tic();
+      hits_svm = test_sc(CC, reshape(X_test, [D*I, size(X_test)(3)])');
+      hits_svm = hits_svm.classlabel - 1;
+      t_pred = toc();
+      correctness = zeros(2, length(d_test))
+      svm_correctness_parallel(1, :) = d_test;
+      svm_correctness_parallel(2, :) = hits_svm;
+    else
+      warning('No support vectors during SVM training')
+      svm_training_parallel(1, s) = -1;
+      svm_prediction_parallel(1, s) = -1;
+      svm_correctness_parallel(1, test_idx:test_idx + length(d_test) - 1) = -1;
+    endif
 endfunction
 
