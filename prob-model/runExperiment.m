@@ -15,12 +15,12 @@ It = 25;
 min_K = 2;
 max_K = 2;
 min_N = 1;
-max_N = 2000;
+max_N = Inf;
 refresh_rate = 100;
 win_len = 1000;
 cross_S = nproc();
 
-global deter = true;
+global deter = false;
 X = 0;
 d = 0;
 if(deter)
