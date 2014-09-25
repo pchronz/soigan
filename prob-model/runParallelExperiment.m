@@ -77,37 +77,37 @@ function runParallelExperiment(X, d, min_K, max_K, S = 10)
       svm_correctness_parallel(1, test_idx:test_idx + length(d_test) - 1) = -1;
     endif
 
-    for K = min_K:max_K
-      % TODO What happens if we balance the data set first as for the SVM?
-      %X_tr = X_red(:, :, win_n:n);
-      %d_tr = d(1, win_n:n);
-      disp('Baseline model training --- parallel')
-      tic()
-      [centers, rho_base] = learnBaselineModel(K, X_tr, d_tr);
-      baseline_training_parallel(K, s) = toc();
-      % predict baseline
-      disp('Baseline model prediction --- parallel')
-      tic()
-      for n = 1:length(d_test)
-        [p_0, p_1] = predictBaseline(X_test(:, :, n), centers, rho_base);
-        baseline_correctness_parallel(K, 2, test_idx + n - 1) = double((p_0 < p_1));
-      endfor
-      baseline_prediction_parallel(K, s) = toc();
-      baseline_correctness_parallel(K, 1, test_idx:test_idx + length(d_test) - 1) = d_test;
+    %for K = min_K:max_K
+    %  % TODO What happens if we balance the data set first as for the SVM?
+    %  %X_tr = X_red(:, :, win_n:n);
+    %  %d_tr = d(1, win_n:n);
+    %  disp('Baseline model training --- parallel')
+    %  tic()
+    %  [centers, rho_base] = learnBaselineModel(K, X_tr, d_tr);
+    %  baseline_training_parallel(K, s) = toc();
+    %  % predict baseline
+    %  disp('Baseline model prediction --- parallel')
+    %  tic()
+    %  for n = 1:length(d_test)
+    %    [p_0, p_1] = predictBaseline(X_test(:, :, n), centers, rho_base);
+    %    baseline_correctness_parallel(K, 2, test_idx + n - 1) = double((p_0 < p_1));
+    %  endfor
+    %  baseline_prediction_parallel(K, s) = toc();
+    %  baseline_correctness_parallel(K, 1, test_idx:test_idx + length(d_test) - 1) = d_test;
 
-      %disp('Multi-mixture model training --- parallel')
-      %tic()
-      %[mus, Sigmas, rho, pi] = learnExactIndependent(K, X_tr, d_tr, 30);
-      %elapsed = toc()
-      %prob_model_training_parallel(K, n + 1) = elapsed;
-      %disp('Multi-mixture model prediction --- parallel')
-      %tic()
-      %[p_0, p_1] = predictExactIndependent(X_red(:, :, n + 1), mus, Sigmas, rho, pi);
-      %elapsed = toc()
-      %prob_model_prediction_parallel(K, n + 1) = elapsed;
-      %prob_model_correctness_parallel(K, n + 1) = double((p_0 < p_1) == d(n + 1));
-      %prob_model_correctness_parallel(K, 1:n + 1);
-    endfor
+    %  %disp('Multi-mixture model training --- parallel')
+    %  %tic()
+    %  %[mus, Sigmas, rho, pi] = learnExactIndependent(K, X_tr, d_tr, 30);
+    %  %elapsed = toc()
+    %  %prob_model_training_parallel(K, n + 1) = elapsed;
+    %  %disp('Multi-mixture model prediction --- parallel')
+    %  %tic()
+    %  %[p_0, p_1] = predictExactIndependent(X_red(:, :, n + 1), mus, Sigmas, rho, pi);
+    %  %elapsed = toc()
+    %  %prob_model_prediction_parallel(K, n + 1) = elapsed;
+    %  %prob_model_correctness_parallel(K, n + 1) = double((p_0 < p_1) == d(n + 1));
+    %  %prob_model_correctness_parallel(K, 1:n + 1);
+    %endfor
 
     % Update the position of our result pointer.
     test_idx += length(d_test);
