@@ -88,7 +88,7 @@ function runParallelExperiment(X, d, min_K, max_K, S = 10)
       % predict baseline
       disp('Baseline model prediction --- parallel')
       tic()
-      for n = 1:size(X_test)(3)
+      for n = 1:length(d_test)
         [p_0, p_1] = predictBaseline(X_test(:, :, n), centers, rho_base);
         baseline_correctness_parallel(K, 2, test_idx + n - 1) = double((p_0 < p_1));
       endfor
@@ -139,6 +139,8 @@ function runParallelExperiment(X, d, min_K, max_K, S = 10)
   endfor
   % Delete all unused entries in the results.
   bernoulli_correctness_parallel(:, test_idx:end) = [];
+  svm_correctness_parallel(:, test_idx:end) = [];
+  baseline_correctness_parallel(:, :, test_idx:end) = [];
 endfunction
 
 function [t_train, t_pred, correctness] =  runBernoulliParallelExperiment(d_tr, d_test, s, test_idx)
