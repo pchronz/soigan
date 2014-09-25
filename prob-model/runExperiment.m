@@ -39,5 +39,5 @@ disp(sum(d == 0))
 disp(sum(d == 1))
 
 %[baseline_correctness_serial, baseline_training_serial, baseline_prediction_serial, prob_model_correctness_serial, prob_model_training_serial, prob_model_prediction_serial, svm_correctness_serial, svm_training_serial, svm_prediction_serial] = runSerialExperiment(X, d, min_K, max_K, min_N, refresh_rate, 1000, cross_S);
-runParallelExperiment(X, d, min_K, max_K, 32);
+runParallelExperiment(X, d, min_K, max_K, 2);
 
