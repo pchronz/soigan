@@ -8,13 +8,14 @@ function runParallelExperiment(X, d, min_K, max_K, S = 10)
   bernoulli_training_parallel = zeros(1, S);
   bernoulli_prediction_parallel = zeros(1, S);
   % (true value, predicted value) X predictions
-  svm_correctness_parallel = zeros(1, S*(N - floor(N/S)));
+  svm_correctness_parallel = zeros(2, S*(N - floor(N/S)));
   svm_training_parallel = zeros(1, S);
   svm_prediction_parallel = zeros(1, S);
-
-  baseline_correctness_parallel = zeros(max_K, N);
+  % K X (true value, predicted value) X predictions
+  baseline_correctness_parallel = zeros(max_K, 2, S*(N - floor(N/S)));
   baseline_training_parallel = zeros(max_K, S);
   baseline_prediction_parallel = zeros(max_K, S);
+
   prob_model_correctness_parallel = zeros(max_K, N);
   prob_model_training_parallel = zeros(max_K, S);
   prob_model_prediction_parallel = zeros(max_K, S);
@@ -23,6 +24,16 @@ function runParallelExperiment(X, d, min_K, max_K, S = 10)
   first_neg = min([1:N](d == 0));
   first_pos = min([1:N](d == 1));
   assert(!isempty(first_neg) && !isempty(first_pos))
+
+  % TODO
+  %tic()
+  %disp('Running dimensionality reduction')
+  %% TODO XXX cross reduction needs to happen with each run to make it realistic.
+  %[services, dims] = S);
+  %X_red = extractReducedData(X, services, dims);
+  %cross_red_time = toc()
+  %save experimentResultsParallelCrossReductionTime.mat cross_red_time
+
 
   % Index of the current position of the tests.
   test_idx = 1;
@@ -66,67 +77,37 @@ function runParallelExperiment(X, d, min_K, max_K, S = 10)
       svm_correctness_parallel(1, test_idx:test_idx + length(d_test) - 1) = -1;
     endif
 
-    %% going one step ahead is fine as long as the time required for prediction and training
-    %% is less than the current time plus the time for which we wish to predict. Actually there
-    %% we also need to count in a slack that is the time until which the observed global value
-    %% (via Cern) will be available and the time that we need to react and fix an error (MTTR).
-    %% baseline & prob model
-    %%for n = max_K:N - 1
-    %last_training = 0;
-    %tic()
-    %disp('Running dimensionality reduction')
-    %% TODO XXX cross reduction needs to happen with each run to make it realistic.
-    %[services, dims] = S);
-    %X_red = extractReducedData(X, services, dims);
-    %cross_red_time = toc()
-    %save experimentResultsParallelCrossReductionTime.mat cross_red_time
-    %for n = min_N:N - 1
-    %  for K = min_K:max_K
-    %    disp('n -- parallel')
-    %    disp([num2str(n), '/', num2str(N - 1), ' = ', num2str(n/N)*100, '%'])
-    %    disp('K -- parallel')
-    %    disp([num2str(K), '/', num2str(max_K), ' = ', num2str(K/max_K)*100, '%'])
-    %    % TODO What happens if we balance the data set first as for the SVM?
-    %    win_n = max(1, n - win_len + 1);
-    %    X_tr = X_red(:, :, win_n:n);
-    %    d_tr = d(1, win_n:n);
-    %    if(last_training == 0 || (n - last_training) >= refresh_rate)
-    %      disp('Baseline model training --- parallel')
-    %      tic()
-    %      [centers, rho_base] = learnBaselineModel(K, X_tr, d_tr);
-    %      elapsed = toc()
-    %      baseline_training_parallel(K, n + 1) = elapsed;
-    %    endif
-    %    % predict baseline
-    %    disp('Baseline model prediction --- parallel')
-    %    tic()
-    %    [p_0, p_1] = predictBaseline(X_red(:, :, n + 1), centers, rho_base);
-    %    elapsed = toc()
-    %    baseline_prediction_parallel(K, n + 1) = elapsed;
-    %    baseline_correctness_parallel(K, n + 1) = double((p_0 < p_1) == d(n + 1));
+    for K = min_K:max_K
+      % TODO What happens if we balance the data set first as for the SVM?
+      %X_tr = X_red(:, :, win_n:n);
+      %d_tr = d(1, win_n:n);
+      disp('Baseline model training --- parallel')
+      tic()
+      [centers, rho_base] = learnBaselineModel(K, X_tr, d_tr);
+      baseline_training_parallel(K, s) = toc();
+      % predict baseline
+      disp('Baseline model prediction --- parallel')
+      tic()
+      for n = 1:size(X_test)(3)
+        [p_0, p_1] = predictBaseline(X_test(:, :, n), centers, rho_base);
+        baseline_correctness_parallel(K, 2, test_idx + n - 1) = double((p_0 < p_1));
+      endfor
+      baseline_prediction_parallel(K, s) = toc();
+      baseline_correctness_parallel(K, 1, test_idx:test_idx + length(d_test) - 1) = d_test;
 
-    %    if(last_training == 0 || (n - last_training) >= refresh_rate)
-    %      disp('Multi-mixture model training --- parallel')
-    %      tic()
-    %      [mus, Sigmas, rho, pi] = learnExactIndependent(K, X_tr, d_tr, 30);
-    %      elapsed = toc()
-    %    endif
-    %    prob_model_training_parallel(K, n + 1) = elapsed;
-    %    disp('Multi-mixture model prediction --- parallel')
-    %    tic()
-    %    [p_0, p_1] = predictExactIndependent(X_red(:, :, n + 1), mus, Sigmas, rho, pi);
-    %    elapsed = toc()
-    %    prob_model_prediction_parallel(K, n + 1) = elapsed;
-    %    prob_model_correctness_parallel(K, n + 1) = double((p_0 < p_1) == d(n + 1));
-    %    prob_model_correctness_parallel(K, 1:n + 1);
-    %    p_0
-    %    p_1
-
-    %    if(last_training == 0 || (n - last_training) >= refresh_rate && K == max_K)
-    %      last_training = n;
-    %    endif
-
-        % better save than sorry
+      %disp('Multi-mixture model training --- parallel')
+      %tic()
+      %[mus, Sigmas, rho, pi] = learnExactIndependent(K, X_tr, d_tr, 30);
+      %elapsed = toc()
+      %prob_model_training_parallel(K, n + 1) = elapsed;
+      %disp('Multi-mixture model prediction --- parallel')
+      %tic()
+      %[p_0, p_1] = predictExactIndependent(X_red(:, :, n + 1), mus, Sigmas, rho, pi);
+      %elapsed = toc()
+      %prob_model_prediction_parallel(K, n + 1) = elapsed;
+      %prob_model_correctness_parallel(K, n + 1) = double((p_0 < p_1) == d(n + 1));
+      %prob_model_correctness_parallel(K, 1:n + 1);
+    endfor
 
     % Update the position of our result pointer.
     test_idx += length(d_test);
