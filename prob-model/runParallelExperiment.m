@@ -3,20 +3,21 @@ function runParallelExperiment(X, d, min_K, max_K, S = 10)
   % PARALLEL EXPERIMENT
   [D, I, N] = size(X);
   % result containers
+  % (true value, predicted value) X predictions
+  bernoulli_correctness_parallel = zeros(2, S*(N - floor(N/S)));
+  bernoulli_training_parallel = zeros(1, S);
+  bernoulli_prediction_parallel = zeros(1, S);
+  % (true value, predicted value) X predictions
+  svm_correctness_parallel = zeros(1, S*(N - floor(N/S)));
+  svm_training_parallel = zeros(1, S);
+  svm_prediction_parallel = zeros(1, S);
+
   baseline_correctness_parallel = zeros(max_K, N);
-  % TODO Store the amount of data points in each and the value of S
   baseline_training_parallel = zeros(max_K, S);
   baseline_prediction_parallel = zeros(max_K, S);
   prob_model_correctness_parallel = zeros(max_K, N);
   prob_model_training_parallel = zeros(max_K, S);
   prob_model_prediction_parallel = zeros(max_K, S);
-  svm_correctness_parallel = zeros(1, N);
-  svm_training_parallel = zeros(1, S);
-  svm_prediction_parallel = zeros(1, S);
-  % (true value, predicted value) X predictions
-  bernoulli_correctness_parallel = zeros(2, S*(N - floor(N/S)));
-  bernoulli_training_parallel = zeros(1, S);
-  bernoulli_prediction_parallel = zeros(1, S);
 
   % Verify that we have a value for each class in the data set.
   first_neg = min([1:N](d == 0));
@@ -29,58 +30,41 @@ function runParallelExperiment(X, d, min_K, max_K, S = 10)
   for s = 1:S
     [X_test, d_test, X_tr, d_tr] = splitDataCross(X, d, s, S);
 
+    % Bernoulli
+    disp('Bernoulli')
     [t_train, t_pred, correctness] = runBernoulliParallelExperiment(d_tr, d_test, s, test_idx);
     bernoulli_training_parallel(1, s) = t_train;
     bernoulli_prediction_parallel(1, s) = t_pred;
     bernoulli_correctness_parallel(:, test_idx:test_idx + length(d_test) - 1) = correctness;
     
-    %last_training = 0;
-    %% SVM
-    %for n = min_N:N - 1
-    %  n
-
-    %  win_n = max(1, n - win_len + 1);
-    %  X_tr = X(:, :, win_n:n);
-    %  d_tr = d(1, win_n:n);
-    %  if(last_training == 0 || (n - last_training) >= refresh_rate)
-    %    disp('SVM training')
-    %    % learn SVM
-    %    tic()
-    %    MODE.TYPE='rbf';
-    %    MODE.hyperparameter.c_value=rand(1)*250;
-    %    MODE.hyperparameter.gamma=rand(1)/10000;
-    %    if(sum(d_tr) > 0 && sum(!d_tr) > 0)
-    %      [X_tr, d_tr] = balanceData(X_tr, d_tr);
-    %    endif
-    %    [D, I, N] = size(X_tr);
-    %    CC = train_sc(reshape(X_tr, [D*I, N])', (d_tr + 1)', MODE);
-    %    % XXX why does the SVM not work below a certain number of training vectors?
-    %    % ==> cause it ain't got more than one class observed!
-    %    elapsed = toc();
-    %    svm_training_parallel(n) = elapsed;
-    %    last_training = n;
-    %  endif
-    %  if(CC.model.totalSV > 0)
-    %    disp('SVM prediction')
-    %    % predict SVM
-    %    tic();
-    %    [D, I, N_te] = size(X(:, :, n + 1));
-    %    hits_svm = test_sc(CC, reshape(X(:, :, n + 1), [D*I, N_te])');
-    %    hits_svm = hits_svm.classlabel - 1;
-    %    hits_svm = sum(hits_svm == d(1, n + 1));
-    %    elapsed = toc();
-    %    svm_prediction_parallel(n) = elapsed;
-    %    assert(hits_svm == 0 || hits_svm == 1);
-    %    svm_correctness_parallel(n) = hits_svm;
-    %  else
-    %    % disp('SVM model failed at...')
-    %    % n
-    %    svm_training_parallel(n) = -1;
-    %    svm_correctness_parallel(n) = -1;
-    %    svm_prediction_parallel(n) = -1;
-    %  endif
-    %endfor
-    %[D, I, N] = size(X);
+    % SVM
+    disp('SVM')
+    % learn SVM
+    tic()
+    MODE.TYPE='rbf';
+    MODE.hyperparameter.c_value=rand(1)*250;
+    MODE.hyperparameter.gamma=rand(1)/10000;
+    if(sum(d_tr) > 0 && sum(!d_tr) > 0)
+      [X_tr_bal, d_tr_bal] = balanceData(X_tr, d_tr);
+    endif
+    [D, I, N_bal] = size(X_tr_bal);
+    CC = train_sc(reshape(X_tr_bal, [D*I, N_bal])', (d_tr_bal + 1)', MODE);
+    svm_training_parallel(1, s) = toc();
+    if(CC.model.totalSV > 0)
+      % predict SVM
+      tic();
+      hits_svm = test_sc(CC, reshape(X_test, [D*I, size(X_test)(3)])');
+      hits_svm = hits_svm.classlabel - 1;
+      svm_prediction_parallel(1, s) = toc();
+      svm_correctness_parallel(1, test_idx:test_idx + length(d_test) - 1) = d_test;
+      svm_correctness_parallel(2, test_idx:test_idx + length(d_test) - 1) = hits_svm;
+      test_idx + length(d_test - 1)
+    else
+      warning('No support vectors during SVM training')
+      svm_training_parallel(1, s) = -1;
+      svm_prediction_parallel(1, s) = -1;
+      svm_correctness_parallel(1, test_idx:test_idx + length(d_test) - 1) = -1;
+    endif
 
     %% going one step ahead is fine as long as the time required for prediction and training
     %% is less than the current time plus the time for which we wish to predict. Actually there
@@ -148,7 +132,7 @@ function runParallelExperiment(X, d, min_K, max_K, S = 10)
     test_idx += length(d_test);
 
     try
-      save -V7 experimentResultsParallel.mat d min_K max_K S bernoulli_correctness_parallel bernoulli_training_parallel bernoulli_prediction_parallel
+      save -V7 experimentResultsParallel.mat min_K max_K S bernoulli_correctness_parallel bernoulli_training_parallel bernoulli_prediction_parallel svm_correctness_parallel svm_training_parallel svm_prediction_parallel
       save -V7 experimentResultsParallelRelevantServices.mat services dims
       disp('The parallel results have been saved')
     catch
@@ -162,15 +146,15 @@ function runParallelExperiment(X, d, min_K, max_K, S = 10)
     bernoulli_correctness_parallel(:, 1:test_idx - 1)
     bernoulli_training_parallel(1, s)
     bernoulli_prediction_parallel(1, s)
+    svm_correctness_parallel(:, 1:test_idx - 1)
+    svm_training_parallel(1, :)
+    svm_prediction_parallel(1, :)
     %baseline_correctness_parallel
     %baseline_training_parallel
     %baseline_prediction_parallel
     %prob_model_correctness_parallel
     %prob_model_training_parallel
     %prob_model_prediction_parallel
-    %svm_correctness_parallel
-    %svm_training_parallel
-    %svm_prediction_parallel
   endfor
   % Delete all unused entries in the results.
   bernoulli_correctness_parallel(:, test_idx:end) = [];
