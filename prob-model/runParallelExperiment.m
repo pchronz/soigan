@@ -113,7 +113,7 @@ function runParallelExperiment(X, d, min_K, max_K, S = 10)
     test_idx += length(d_test);
 
     try
-      save -V7 experimentResultsParallel.mat min_K max_K S bernoulli_correctness_parallel bernoulli_training_parallel bernoulli_prediction_parallel svm_correctness_parallel svm_training_parallel svm_prediction_parallel
+      save -V7 experimentResultsParallel.mat min_K max_K S bernoulli_correctness_parallel bernoulli_training_parallel bernoulli_prediction_parallel svm_correctness_parallel svm_training_parallel svm_prediction_parallel baseline_correctness_parallel baseline_training_parallel baseline_prediction_parallel
       save -V7 experimentResultsParallelRelevantServices.mat services dims
       disp('The parallel results have been saved')
     catch
@@ -130,9 +130,9 @@ function runParallelExperiment(X, d, min_K, max_K, S = 10)
     svm_correctness_parallel(:, 1:test_idx - 1)
     svm_training_parallel(1, :)
     svm_prediction_parallel(1, :)
-    %baseline_correctness_parallel
-    %baseline_training_parallel
-    %baseline_prediction_parallel
+    baseline_correctness_parallel(:, :, 1:test_idx - 1)
+    baseline_training_parallel(1, s)
+    baseline_prediction_parallel(1, s)
     %prob_model_correctness_parallel
     %prob_model_training_parallel
     %prob_model_prediction_parallel
