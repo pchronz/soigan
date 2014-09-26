@@ -148,19 +148,19 @@ function [t_train, t_pred, correctness] =  runSvmParallelExperiment(X_tr, d_tr, 
     CC = train_sc(reshape(X_tr_bal, [D*I, N_bal])', (d_tr_bal + 1)', MODE);
     t_train = toc();
     correctness = zeros(2, length(d_test))
+    correctness(1, :) = d_test;
     if(CC.model.totalSV > 0)
       % predict SVM
       tic();
       hits_svm = test_sc(CC, reshape(X_test, [D*I, size(X_test)(3)])');
       hits_svm = hits_svm.classlabel - 1;
       t_pred = toc();
-      correctness_parallel(1, :) = d_test;
-      correctness_parallel(2, :) = hits_svm;
+      correctness(2, :) = hits_svm;
     else
       error('No support vectors during SVM training')
       t_train = -1;
       t_pred = -1;
-      correctness_parallel(1, 1:length(d_test) - 1) = -1;
+      correctness(1, 1:length(d_test) - 1) = -1;
     endif
 endfunction
 
