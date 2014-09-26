@@ -25,21 +25,19 @@ function runParallelExperiment(X, d, min_K, max_K, S = 10)
   first_pos = min([1:N](d == 1));
   assert(!isempty(first_neg) && !isempty(first_pos))
 
-  % TODO
-  %tic()
-  %disp('Running dimensionality reduction')
-  %% TODO XXX cross reduction needs to happen with each run to make it realistic.
-  %[services, dims] = S);
-  %X_red = extractReducedData(X, services, dims);
-  %cross_red_time = toc()
-  %save experimentResultsParallelCrossReductionTime.mat cross_red_time
+  disp('Running dimensionality reduction')
+  tic()
+  [services, dims] = crossReduceDimensions(X, d, 4);
+  X_red = extractReducedData(X, services, dims);
+  cross_red_time = toc()
+  save experimentResultsParallelCrossReductionTime.mat cross_red_time
 
 
   % Index of the current position of the tests.
   test_idx = 1;
 
   for s = 1:S
-    [X_tr, d_tr, X_test, d_test] = splitDataRand(X, d, 0.2);
+    [X_tr, d_tr, X_test, d_test] = splitDataRand(X_red, d, 0.5);
 
     % Bernoulli
     disp('Bernoulli')
@@ -180,10 +178,10 @@ function [t_train, t_pred, correctness] =  runApproximateParallelExperiment(X_tr
     tic()
     for n = 1:length(d_test)
       [p_0, p_1] = predictBaseline(X_test(:, :, n), centers, rho_base);
-      correctness(K, 2, n - 1) = double((p_0 < p_1));
+      correctness(K, 2, n) = double((p_0 < p_1));
     endfor
     t_pred(K) = toc();
-    correctness(K, 1, 1:length(d_test) - 1) = d_test;
+    correctness(K, 1, 1:length(d_test)) = d_test;
   endfor
 endfunction
 
