@@ -28,8 +28,13 @@ function p_Z = computePosteriorVectorized(muss, Sigmass, pii, rhoo, X, d, K)
       invSigmas(k, i) = inv(Sigmas(:, :, k, i));
     endfor
   endfor
-  %p_Z_cell = parcellfun(nproc(), @computePosteriorN, X_c, d_c, 'UniformOutput', false, 'ErrorHandler', @(err) disp(err));
-  p_Z_cell = cellfun(@computePosteriorN, X_c, d_c, 'UniformOutput', false, 'ErrorHandler', @(err) disp(err));
+  p_Z_cell = 0;
+  global para;
+  if(para)
+    p_Z_cell = parcellfun(nproc(), @computePosteriorN, X_c, d_c, 'UniformOutput', false, 'ErrorHandler', @(err) disp(err));
+  else
+    p_Z_cell = cellfun(@computePosteriorN, X_c, d_c, 'UniformOutput', false, 'ErrorHandler', @(err) disp(err));
+  end
   p_Z = cell2mat(p_Z_cell');
   %for n = 1:N
   %  p_Z(:, n) = arrayfun(createComputePosteriorGlobal(D, K, I, mus, Sigmas, pi, X(:, :, n), d(n)), [1:K^I]', rho);

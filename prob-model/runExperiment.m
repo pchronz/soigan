@@ -21,6 +21,7 @@ win_len = 1000;
 cross_S = nproc();
 
 global deter = false;
+global para = true;
 X = 0;
 d = 0;
 if(deter)
