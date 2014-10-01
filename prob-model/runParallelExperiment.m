@@ -77,20 +77,6 @@ function runParallelExperiment(X, d, min_K, max_K, S = 10)
     catch
       error(last_error())
     end_try_catch
-
-    % Output the results
-    bernoulli_correctness_parallel(:, 1:test_idx - 1)
-    bernoulli_training_parallel(1, s)
-    bernoulli_prediction_parallel(1, s)
-    svm_correctness_parallel(:, 1:test_idx - 1)
-    svm_training_parallel(1, :)
-    svm_prediction_parallel(1, :)
-    baseline_correctness_parallel(:, :, 1:test_idx - 1)
-    baseline_training_parallel(1, s)
-    baseline_prediction_parallel(1, s)
-    mixture_correctness_parallel(:, :, 1:test_idx - 1)
-    mixture_training_parallel(1, s)
-    mixture_prediction_parallel(1, s)
   endfor
   % Delete all unused entries in the results.
   bernoulli_correctness_parallel(:, test_idx:end) = [];
@@ -137,7 +123,7 @@ function [t_train, t_pred, correctness] = runSvmParallelExperiment(X_tr, d_tr, X
     [D, I, N_bal] = size(X_tr_bal);
     CC = train_sc(reshape(X_tr_bal, [D*I, N_bal])', (d_tr_bal + 1)', MODE);
     t_train = toc();
-    correctness = zeros(2, length(d_test))
+    correctness = zeros(2, length(d_test));
     correctness(1, :) = d_test;
     if(CC.model.totalSV > 0)
       % predict SVM
@@ -190,7 +176,7 @@ function [t_train, t_pred, correctness] = runMixtureParallelExperiment(X_tr, d_t
     for n = 1:length(d_test)
       [p_0, p_1] = predictExactIndependent(X_test(:, :, n), mus, Sigmas, rho, pi);
       t_pred(K) = toc();
-      correctness(K, 2, n) = double(p_0 < p_1);
+      correctness(K, 2, n) = double(p_0 > p_1);
     endfor
   endfor
 endfunction

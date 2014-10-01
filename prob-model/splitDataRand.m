@@ -9,13 +9,13 @@ function [X_tr, d_tr, X_test, d_test] = splitDataRand(X, d, p)
   % 0s first
   assert(sum(flags_0) >= 2)
   idx_0 = idx_0(randperm(length(idx_0)));
-  idx_0_tr = idx_0(1:ceil(p*length(idx_0)))
-  idx_0_test = idx_0(ceil(p*length(idx_0)) + 1:end)
+  idx_0_tr = idx_0(1:ceil(p*length(idx_0)));
+  idx_0_test = idx_0(ceil(p*length(idx_0)) + 1:end);
   % 1s second
   assert(sum(flags_1) >= 2)
   idx_1 = idx_1(randperm(length(idx_1)));
-  idx_1_tr = idx_1(1:ceil(p*length(idx_1)))
-  idx_1_test = idx_1(ceil(p*length(idx_1)) + 1:end)
+  idx_1_tr = idx_1(1:ceil(p*length(idx_1)));
+  idx_1_test = idx_1(ceil(p*length(idx_1)) + 1:end);
   % now assemble both into common training and test sets
   assert(length(intersect(idx_1_tr, idx_1_test)) == 0)
   assert(length(intersect(idx_0_tr, idx_0_test)) == 0)
