@@ -176,7 +176,7 @@ function [t_train, t_pred, correctness] = runMixtureParallelExperiment(X_tr, d_t
     for n = 1:length(d_test)
       [p_0, p_1] = predictExactIndependent(X_test(:, :, n), mus, Sigmas, rho, pi);
       t_pred(K) = toc();
-      correctness(K, 2, n) = double(p_0 < p_1);
+      correctness(K, 2, n) = double((p_0 < p_1));
     endfor
   endfor
 endfunction
