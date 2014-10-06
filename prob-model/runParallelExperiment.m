@@ -27,7 +27,7 @@ function runParallelExperiment(X, d, min_K, max_K, S = 10)
 
   disp('Running dimensionality reduction')
   tic()
-  [services, dims] = crossReduceDimensions(X, d, 4);
+  [services, dims] = crossReduceDimensions(X, d, 8);
   X_red = extractReducedData(X, services, dims);
   cross_red_time = toc()
   save experimentResultsParallelCrossReductionTime.mat cross_red_time
@@ -177,7 +177,8 @@ function [t_train, t_pred, correctness] = runMixtureParallelExperiment(X_tr, d_t
       [p_0, p_1] = predictExactIndependent(X_test(:, :, n), mus, Sigmas, rho, pi);
       t_pred(K) = toc();
 	p_0 + p_1
-	assert(p_0 + p_1 == 1.0)
+	assert(p_0 + p_1 <= 1.005)
+	assert(p_0 + p_1 >= 0.995)
       correctness(K, 2, n) = double((p_0 < p_1));
     endfor
   endfor
