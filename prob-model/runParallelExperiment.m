@@ -168,7 +168,7 @@ function [t_train, t_pred, correctness] = runMixtureParallelExperiment(X_tr, d_t
   for K = min_K:max_K
     disp('Mixture model training --- parallel')
     tic()
-    [mus, Sigmas, rho, pi] = learnExactIndependent(K, X_tr, d_tr, 30);
+    [mus, Sigmas, rho, pi] = learnExactIndependent(K, X_tr, d_tr, 50);
     t_train(K) = toc();
     disp('Mixture model prediction --- parallel')
     tic()
@@ -176,6 +176,8 @@ function [t_train, t_pred, correctness] = runMixtureParallelExperiment(X_tr, d_t
     for n = 1:length(d_test)
       [p_0, p_1] = predictExactIndependent(X_test(:, :, n), mus, Sigmas, rho, pi);
       t_pred(K) = toc();
+	p_0 + p_1
+	assert(p_0 + p_1 == 1.0)
       correctness(K, 2, n) = double((p_0 < p_1));
     endfor
   endfor
