@@ -4,20 +4,19 @@ function p_Z = computePosteriorApproximateVectorized(mus, Sigmas, pi, rho, X, d,
     [D, D, K, I] = size(Sigmas);
     [D, I, N] = size(X);
     % TODO Change the format here.
-    p_Z = -Inf*ones(K^I, N);
+    %p_Z = -Inf*ones(K^I, N);
     % The following allocates memory, that is needed in the l-loop. Putting it hear to avoid highly-frequent re-allocation.
     % select the right mus; needed in the l-loop;
     mus_l = zeros(D, I);
     z_idx = zeros(I, 1);
     Sigmas_l = zeros(D, D, I);
     % TODO Use cellfun and parcellfun to compute the posterior data-parallel.
-    for n = 1:N
-      % TODO Measure time between intervals and make sure to print something regularly.
-      if(mod(n, 10) == 0 || n == N)
-        n
-      endif
-      p_Z(:, n) = computePosteriorN(X(:, :, n), d(n), mus, Sigmas, pi, rho, K, I, D);
-    endfor
+    X_c = reshape(mat2cell(X, D, I, ones(N, 1)), N);
+    d_c = mat2cell(d, 1, ones(N, 1))';
+    p_Z = parcellfun(nproc(), createComputePosteriorN(mus, Sigmas, pi, rho, K, I, D), X_c, d_c, 'UniformOutput', false);
+    % Convert to array.
+    p_Z = reshape(cell2mat(p_Z), K^I, N);
+    p_Z
     % Scale the values, so that the largest un-normalized entry for the posterior for one n is 10.
     max_entries = max(p_Z);
     p_Z = p_Z - max_entries + log(10);
@@ -36,6 +35,10 @@ function p_Z = computePosteriorApproximateVectorized(mus, Sigmas, pi, rho, X, d,
     %    error('p_Z does not sum to one')
     %  endif
     %endfor
+endfunction
+
+function f = createComputePosteriorN(mus, Sigmas, pi, rho, K, I, D)
+  f = @(X_n, d_n) computePosteriorN(X_n, d_n, mus, Sigmas, pi, rho, K, I, D)
 endfunction
 
 % TODO There is some redundant (for n) computation in this function.

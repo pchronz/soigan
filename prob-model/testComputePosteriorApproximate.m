@@ -25,20 +25,24 @@ X = rand(D, I, N);
 d = binornd(ones(1, N), 0.5);
 
 tic()
+disp('Approximate parallel')
 p_Z_appr_vec = computePosteriorApproximateVectorized(mus, Sigmas, pi, rho, X, d, K);
 toc()
 
 tic()
+disp('Approximate')
 p_Z_appr = computePosteriorApproximate(mus, Sigmas, pi, rho, X, d, K);
 toc()
 
-%tic()
-%p_Z_slo = computePosteriorSlow(mus, Sigmas, pi, rho, X, d, K);
-%toc()
-%
-%tic()
-%p_Z_vec = computePosteriorVectorized(mus, Sigmas, pi, rho, X, d, K);
-%toc()
+tic()
+disp('Exact sequential')
+p_Z_slo = computePosteriorSlow(mus, Sigmas, pi, rho, X, d, K);
+toc()
+
+tic()
+disp('Exact parallel')
+p_Z_vec = computePosteriorVectorized(mus, Sigmas, pi, rho, X, d, K);
+toc()
 
 %p_Z_slo
 %p_Z_appr
