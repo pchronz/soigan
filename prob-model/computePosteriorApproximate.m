@@ -64,12 +64,9 @@ function p_Z = computePosteriorApproximate(mus, Sigmas, pi, rho, X, d, K)
       endfor
       assert(prod(sum(loc_states)) != 0)
       % Assemble the relevant states into global states.
-      loc_states
       glob_states = assembleStates(loc_states);
-      length(glob_states)
       % Add the global states from p_Z
       glob_states = union(glob_states, rhos_idx);
-      disp(['#global states: ', num2str(length(glob_states)), ' K^I = ', num2str(K^I)])
       % TODO Return the relevant states and probs for X_n for maximization.
       % Compute the posterior for the relevant states.
       for l = glob_states
