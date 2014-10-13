@@ -6,9 +6,9 @@ pkg load nan
 pkg load parallel
 
 D = 10;
-I = 8;
+I = 6;
 K = 3;
-N = 10;
+N = 50;
 
 mus = rand(D, K, I);
 Sigmas = eye(D)(:, :, ones(1, K), ones(1, I));
@@ -25,18 +25,23 @@ X = rand(D, I, N);
 d = binornd(ones(1, N), 0.5);
 
 tic()
+p_Z_appr_vec = computePosteriorApproximateVectorized(mus, Sigmas, pi, rho, X, d, K);
+toc()
+
+tic()
 p_Z_appr = computePosteriorApproximate(mus, Sigmas, pi, rho, X, d, K);
 toc()
 
-tic()
-p_Z_slo = computePosteriorSlow(mus, Sigmas, pi, rho, X, d, K);
-toc()
-
-tic()
-p_Z_vec = computePosteriorVectorized(mus, Sigmas, pi, rho, X, d, K);
-toc()
+%tic()
+%p_Z_slo = computePosteriorSlow(mus, Sigmas, pi, rho, X, d, K);
+%toc()
+%
+%tic()
+%p_Z_vec = computePosteriorVectorized(mus, Sigmas, pi, rho, X, d, K);
+%toc()
 
 %p_Z_slo
 %p_Z_appr
+mean(mean(abs(p_Z_appr - p_Z_appr_vec)))
 mean(mean(abs(p_Z_appr - p_Z_slo)))
 

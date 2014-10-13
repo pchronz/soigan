@@ -19,7 +19,7 @@ function p_Z = computePosteriorApproximate(mus, Sigmas, pi, rho, X, d, K)
     z_idx = zeros(I, 1);
     Sigmas_l = zeros(D, D, I);
     for n = 1:N
-      if(mod(n, 50) == 0 || n == N)
+      if(mod(n, 10) == 0 || n == N)
         n
       endif
       % Compute the probabilities for all components.
@@ -196,5 +196,6 @@ function glob_states = assembleStates(loc_states)
     glob_states = glob_states';
   endif
   assert(length(glob_states) == length(unique(glob_states)))
+  warning('off', 'Octave:broadcast');
 endfunction
 
