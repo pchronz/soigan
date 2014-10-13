@@ -5,20 +5,23 @@ pkg load statistics
 pkg load nan
 pkg load parallel
 
-D = 5;
-I = 3;
-K = 2;
-N = 250;
+D = 10;
+I = 8;
+K = 3;
+N = 10;
 
 mus = rand(D, K, I);
 Sigmas = eye(D)(:, :, ones(1, K), ones(1, I));
-% Randomize and bias the values.
+% Randomize and bias the values for pi.
 pi = rand(K, I);
 pi(ceil(K/2) + 1:end, :) = pi(ceil(K/2) + 1:end, :) * 100;
 pi = 1./sum(pi).*pi;
 %pi = 1/K*rand(K, I);
-rho = 0.5 * ones(K^I, 1);
+% Randomize and bias the values for rho.
+rho = rand(K^I, 1);
+rho(1:0.5*(K^I), 1) = 0.01*rand(0.5*K^I, 1);
 X = rand(D, I, N);
+%rho = rand(K^I, 1);
 d = binornd(ones(1, N), 0.5);
 
 tic()
@@ -33,5 +36,7 @@ tic()
 p_Z_vec = computePosteriorVectorized(mus, Sigmas, pi, rho, X, d, K);
 toc()
 
-mean(mean(abs(p_Z_slo - p_Z_vec)))
+%p_Z_slo
+%p_Z_appr
+mean(mean(abs(p_Z_appr - p_Z_slo)))
 

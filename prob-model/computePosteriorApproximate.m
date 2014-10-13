@@ -1,11 +1,18 @@
 function p_Z = computePosteriorApproximate(mus, Sigmas, pi, rho, X, d, K)
+    warning('off', 'Octave:broadcast');
     % Tolerance values for min probs.
     % TODO Choose based on some rational reason.
-    rho_tol = 0.0005;
+    % TODO How do these numbers relate to probabilites?
+    rho_tol = 0.01;
+    x_tol_range = 1;
+    x_tol_min = 0.1;
+    pi_tol_range = 1;
+    pi_tol_min = 0.01;
     % Inspect the dims.
     [D, D, K, I] = size(Sigmas);
     [D, I, N] = size(X);
-    p_Z = zeros(K^I, N);
+    % TODO Change the format here.
+    p_Z = -Inf*ones(K^I, N);
     % The following allocates memory, that is needed in the l-loop. Putting it hear to avoid highly-frequent re-allocation.
     % select the right mus; needed in the l-loop;
     mus_l = zeros(D, I);
@@ -20,7 +27,6 @@ function p_Z = computePosteriorApproximate(mus, Sigmas, pi, rho, X, d, K)
       for k = 1:K
         for i = 1:I
           log_p_X_n(k, i) = logmvnpdf(X(:, i, n), mus(:, k, i), Sigmas(:, :, k, i));
-          assert(log_p_X_n(k, i) < 0)
         endfor
       endfor
       % Compute the probabilities for all relevant rhos.
@@ -39,18 +45,34 @@ function p_Z = computePosteriorApproximate(mus, Sigmas, pi, rho, X, d, K)
       % TODO Try AND or other operators.
       % TODO Try to choose the largest values.
       % TODO Ensure that at least one local state per service is active. In the worst case just choose the largest one for a service.
-      % DEBUG
-      log_p_X_n
-      log_p_X_n > log(0.01)
-      pi
-      pi > 0.01
-      loc_states = or(log_p_X_n > log(0.01), pi > 0.01);
+      %loc_states = and(and(log_p_X_n > (max(log_p_X_n) - log(x_tol_range)), log_p_X_n > log(x_tol_min)), and(pi > (max(pi)/pi_tol_range), pi > pi_tol_min));
+      loc_states = and(log_p_X_n > log(x_tol_min), pi > pi_tol_min);
+      % Ensure that at least one state per service is selected.
+      for i = 1:I
+        if(sum(loc_states(:, i)) == 0)
+          [v_x, ix_x] = max(log_p_X_n(:, i));
+          [v_pi, ix_pi] = max(pi(:, i));
+          % Choose the index with the larger product of pi and p_x
+          p_x = log_p_X_n(ix_x, i) + log(pi(ix_x, i));
+          p_pi = log_p_X_n(ix_pi, i) + log(pi(ix_pi, i));
+          ix = ix_pi;
+          if(p_x > p_pi)
+            ix = ix_x;
+          endif
+          loc_states(ix, i) = true;
+        endif
+      endfor
+      assert(prod(sum(loc_states)) != 0)
       % Assemble the relevant states into global states.
+      loc_states
       glob_states = assembleStates(loc_states);
+      length(glob_states)
       % Add the global states from p_Z
+      glob_states = union(glob_states, rhos_idx);
+      disp(['#global states: ', num2str(length(glob_states)), ' K^I = ', num2str(K^I)])
       % TODO Return the relevant states and probs for X_n for maximization.
-      % TODO Compute the posterior for the relevant states.
-      for l = 1:K^I
+      % Compute the posterior for the relevant states.
+      for l = glob_states
         [Z_n, z] = dec2oneOfK(l, K, I);
         % z_idx = (base2dec(z(1, :)', K)) + 1;
         for i = 1:I
@@ -70,6 +92,8 @@ function p_Z = computePosteriorApproximate(mus, Sigmas, pi, rho, X, d, K)
         % select the right pis
         pi_l = pi(logical(Z_n));
         % compute the posterior for the current state and observation
+        % TODO Change the format of p_Z to contain idxs and the posterior.
+        % TODO Change the format of rho to contain idxs and the parameter values.
         p_Z(l, n) = log(rho(l)^d(n)) + log((1 - rho(l))^(1 - d(n)));
         % DEBUG
         if(!isreal(p_Z(l, n)))
@@ -151,27 +175,29 @@ function glob_states = assembleStates(loc_states)
   % Assign numbers to the local states.
   loc_num = repmat([0:K - 1]', 1, I);
   % Compute the exponentials.
-  % TODO Is my encoding MSD-first or LSD-first?
+  % The encoding is most-significant digit first.
   for i = 1:I
-    loc_num(:, i) = 2^(i - 1) .* loc_num(:, i);
+    loc_num(:, i) = K^(I - i) .* loc_num(:, i);
   endfor
   % Select the indices based on loc_states 
   loc_cell = cell(I, 1);
   for i = 1:I
     loc_cell(i, 1) = loc_num(loc_states(:, i), i);
   endfor
-  loc_num
-  loc_states
-  loc_cell
   % Compute the relevant global states
   prev_blk_len = 1;
   for i = 1:I
     B = repmat(loc_cell{i}, 1, prev_blk_len);
     B = reshape(B', numel(B), 1);
-    B = repmat(B, length(glob_states)/length(B), 1)
-    glob_states += B
+    B = repmat(B, length(glob_states)/length(B), 1);
+    glob_states += B;
     prev_blk_len *= length(loc_cell{i});
   endfor
+  glob_states += 1;
+  sz = size(glob_states);
+  if(sz(1) > sz(2))
+    glob_states = glob_states';
+  endif
   assert(length(glob_states) == length(unique(glob_states)))
 endfunction
 
