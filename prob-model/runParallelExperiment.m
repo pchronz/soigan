@@ -25,12 +25,20 @@ function runParallelExperiment(X, d, min_K, max_K, S = 10)
   first_pos = min([1:N](d == 1));
   assert(!isempty(first_neg) && !isempty(first_pos))
 
-  disp('Running dimensionality reduction')
-  tic()
-  [services, dims] = crossReduceDimensions(X, d, 8);
-  X_red = extractReducedData(X, services, dims);
-  cross_red_time = toc()
-  save experimentResultsParallelCrossReductionTime.mat cross_red_time
+  global crossred
+  X_red = X;
+  services = 1;
+  dims = 1;
+  if(crossred)
+    disp('Running dimensionality reduction')
+    tic()
+    [services, dims] = crossReduceDimensions(X, d, 8);
+    X_red = extractReducedData(X, services, dims);
+    cross_red_time = toc()
+    save experimentResultsParallelCrossReductionTime.mat cross_red_time
+  else
+    disp('Skipping dimensionality reduction')
+  endif
 
 
   % Index of the current position of the tests.

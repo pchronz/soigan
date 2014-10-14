@@ -22,6 +22,8 @@ cross_S = 8;
 
 global deter = false;
 global para = true;
+global crossred = false;
+
 X = 0;
 d = 0;
 if(deter)
@@ -31,8 +33,8 @@ else
   disp('Preparing data set from scratch.')
   % N, I, R, D, K
   %[X, d] = createSyntheticData(max_N, 5, 3, 3, 3);
-  %[X, d] = loadEwsData(max_N);
-  [X, d] = loadGoeGridFullData(0, max_N);
+  [X, d] = loadEwsData(max_N);
+  %[X, d] = loadGoeGridFullData(0, max_N);
   save detdata.mat X d
 endif
 
