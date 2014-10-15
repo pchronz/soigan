@@ -13,7 +13,13 @@ function p_Z = computePosteriorApproximateVectorized(mus, Sigmas, pi, rho, X, d,
     % TODO Use cellfun and parcellfun to compute the posterior data-parallel.
     X_c = reshape(mat2cell(X, D, I, ones(N, 1)), N);
     d_c = mat2cell(d, 1, ones(N, 1))';
-    p_Z = parcellfun(nproc(), createComputePosteriorN(mus, Sigmas, pi, rho, K, I, D), X_c, d_c, 'UniformOutput', false);
+    global para;
+    p_Z = 0;
+    if(para)
+      p_Z = parcellfun(nproc(), createComputePosteriorN(mus, Sigmas, pi, rho, K, I, D), X_c, d_c, 'UniformOutput', false, 'ErrorHandler', @(err) disp(err));
+    else
+      p_Z = cellfun(createComputePosteriorN(mus, Sigmas, pi, rho, K, I, D), X_c, d_c, 'UniformOutput', false, 'ErrorHandler', @(err) disp(err));
+    endif
     % Convert to array.
     p_Z = reshape(cell2mat(p_Z), K^I, N);
     % Scale the values, so that the largest un-normalized entry for the posterior for one n is 10.
@@ -37,7 +43,7 @@ function p_Z = computePosteriorApproximateVectorized(mus, Sigmas, pi, rho, X, d,
 endfunction
 
 function f = createComputePosteriorN(mus, Sigmas, pi, rho, K, I, D)
-  f = @(X_n, d_n) computePosteriorN(X_n, d_n, mus, Sigmas, pi, rho, K, I, D)
+  f = @(X_n, d_n) computePosteriorN(X_n, d_n, mus, Sigmas, pi, rho, K, I, D);
 endfunction
 
 % TODO There is some redundant (for n) computation in this function.
@@ -46,7 +52,7 @@ function p_Z_n = computePosteriorN(X_n, d_n, mus, Sigmas, pi, rho, K, I, D)
   % TODO Choose based on some rational reason.
   rho_tol = 0.01;
   x_tol_range = 1;
-  x_tol_min = 0.1;
+  x_tol_min = 0.01;
   pi_tol_range = 1;
   pi_tol_min = 0.01;
   % Allocate.

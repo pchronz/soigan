@@ -32,8 +32,8 @@ if(deter)
 else
   disp('Preparing data set from scratch.')
   % N, I, R, D, K
-  %[X, d] = createSyntheticData(max_N, 5, 3, 3, 3);
-  [X, d] = loadEwsData(max_N);
+  [X, d] = createSyntheticData(max_N, 5, 3, 3, 3);
+  %[X, d] = loadEwsData(max_N);
   %[X, d] = loadGoeGridFullData(0, max_N);
   save detdata.mat X d
 endif
