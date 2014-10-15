@@ -15,6 +15,7 @@ function p_Z = computePosteriorApproximateVectorized(mus, Sigmas, pi, rho, X, d,
     d_c = mat2cell(d, 1, ones(N, 1))';
     global para;
     p_Z = 0;
+    size(X)
     if(para)
       p_Z = parcellfun(nproc(), createComputePosteriorN(mus, Sigmas, pi, rho, K, I, D), X_c, d_c, 'UniformOutput', false, 'ErrorHandler', @(err) disp(err));
     else
