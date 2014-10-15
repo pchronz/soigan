@@ -73,6 +73,7 @@ function p_Z_n = computePosteriorN(X_n, d_n, mus, Sigmas, pi, rho, K, I, D)
   else
     rhos_idx = [1:K^I](rho < rho_tol)';
   endif
+  disp(['#rho states: ', num2str(length(rhos_idx)), '/', num2str(K^I)])
   % (idx, rhos) x amount of relevant rhos
   log_p_d_n = zeros(2, length(rhos_idx));
   log_p_d_n(1, :) = rhos_idx;
