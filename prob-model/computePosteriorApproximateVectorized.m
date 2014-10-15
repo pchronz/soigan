@@ -16,7 +16,6 @@ function p_Z = computePosteriorApproximateVectorized(mus, Sigmas, pi, rho, X, d,
     p_Z = parcellfun(nproc(), createComputePosteriorN(mus, Sigmas, pi, rho, K, I, D), X_c, d_c, 'UniformOutput', false);
     % Convert to array.
     p_Z = reshape(cell2mat(p_Z), K^I, N);
-    p_Z
     % Scale the values, so that the largest un-normalized entry for the posterior for one n is 10.
     max_entries = max(p_Z);
     p_Z = p_Z - max_entries + log(10);
@@ -99,6 +98,7 @@ function p_Z_n = computePosteriorN(X_n, d_n, mus, Sigmas, pi, rho, K, I, D)
   glob_states = union(glob_states, rhos_idx);
   % TODO Return the relevant states and probs for X_n for maximization.
   % Compute the posterior for the relevant states.
+  disp(['Using ', num2str(length(glob_states)), '/', num2str(K^I), ' global states.'])
   for l = glob_states
     [Z_n, z] = dec2oneOfK(l, K, I);
     % z_idx = (base2dec(z(1, :)', K)) + 1;
