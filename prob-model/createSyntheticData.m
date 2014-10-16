@@ -1,5 +1,5 @@
 function [X, d] = createSyntheticData(N, I, R, D, K)
-  % Ratio Ok/NOk.
+  % Ratio Ok/(Ok + NOk).
   ratio = 1.0
   % Redundancy groups.
   red_groups = zeros(1, I);
@@ -11,7 +11,7 @@ function [X, d] = createSyntheticData(N, I, R, D, K)
     % Generate the discrete data.
     [X_disc, d] = generateDiscreteData(N, I, R, D, K, red_groups);
     % Verify that we are satisfied with the ratio Ok/NOk.
-    ratio = sum(d)/length(d)
+    ratio = 1 - sum(d)/length(d)
   end
 
   % Get equally spaced means for the states.
