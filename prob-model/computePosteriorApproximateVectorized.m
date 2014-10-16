@@ -15,7 +15,6 @@ function p_Z = computePosteriorApproximateVectorized(mus, Sigmas, pi, rho, X, d,
     d_c = mat2cell(d, 1, ones(N, 1))';
     global para;
     p_Z = 0;
-    size(X)
     if(para)
       p_Z = parcellfun(nproc(), createComputePosteriorN(mus, Sigmas, pi, rho, K, I, D), X_c, d_c, 'UniformOutput', false, 'ErrorHandler', @(err) disp(err));
     else
@@ -73,7 +72,6 @@ function p_Z_n = computePosteriorN(X_n, d_n, mus, Sigmas, pi, rho, K, I, D)
   else
     rhos_idx = [1:K^I](rho < rho_tol)';
   endif
-  disp(['#rho states: ', num2str(length(rhos_idx)), '/', num2str(K^I)])
   % (idx, rhos) x amount of relevant rhos
   log_p_d_n = zeros(2, length(rhos_idx));
   log_p_d_n(1, :) = rhos_idx;
@@ -103,10 +101,13 @@ function p_Z_n = computePosteriorN(X_n, d_n, mus, Sigmas, pi, rho, K, I, D)
   % Assemble the relevant states into global states.
   glob_states = assembleStates(loc_states);
   % Add the global states from p_Z
-  glob_states = union(glob_states, rhos_idx);
+  glob_states_t = intersect(glob_states, rhos_idx);
   % TODO Return the relevant states and probs for X_n for maximization.
   % Compute the posterior for the relevant states.
   disp(['Using ', num2str(length(glob_states)), '/', num2str(K^I), ' global states.'])
+  if(length(glob_states_t) > 0)
+	glob_states = glob_states_t;
+  endif
   for l = glob_states
     [Z_n, z] = dec2oneOfK(l, K, I);
     % z_idx = (base2dec(z(1, :)', K)) + 1;
