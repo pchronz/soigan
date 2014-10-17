@@ -12,10 +12,10 @@ clear all
 % the experimental parameters
 Delay = [0:0];
 It = 25;
-min_K = 2;
-max_K = 2;
+min_K = 3;
+max_K = 3;
 min_N = 1;
-max_N = Inf;
+max_N = 1000;
 refresh_rate = 100;
 win_len = 1000;
 cross_S = 8;
