@@ -22,7 +22,7 @@ cross_S = 8;
 
 global deter = false;
 global para = true;
-global crossred = false;
+global crossred = true;
 
 X = 0;
 d = 0;
