@@ -8,7 +8,7 @@ function [mus, Sigmas, rho, pi] = learnExactIndependent(K, X, d, max_iter = 20)
   mus = rand(D, K, I);
   Sigmas = eye(D)(:, :, ones(1, K), ones(1, I));
   pi = 1/K*ones(K, I);
-  rho = 0.5 * ones(K^I, 1);
+  rho = 0.5*ones(1, K^I);
 
   % run k-means to obtain an initial estimate for the mixture components (mean and covariance)
   for i = 1:I
@@ -72,103 +72,88 @@ function [mus, Sigmas, rho, pi] = learnExactIndependent(K, X, d, max_iter = 20)
     %p_Z = computePosteriorApproximate(mus, Sigmas, pi, rho, X, d, K);
     p_Z = computePosteriorApproximateVectorized(mus, Sigmas, pi, rho, X, d, K);
     disp('Normalizing...')
-    if(sum(sum(p_Z < 0)))
-      more on
-      p_Z_slow = computePosteriorSlow(mus, Sigmas, pi, rho, X, d, K);
-      disp('Number of negative entries in fast posterior:')
-      sum(sum(p_Z < 0))
-      disp('Number of negative entries in slow posterior:')
-      sum(sum(p_Z_slow < 0))
-      save badposteriorparams.mat mus Sigmas pi rho X d K p_Z;
-      more off
-      error('Pre-normalized p_Z contains negative entries')
-    endif
-    if(sum(sum(isnan(p_Z))) != 0)
-      more on
-      p_Z
-      Sigmas
-      mus
-      rho
-      pi
-      disp('Number of NaNs in C++-computed posterior:')
-      sum(sum(isnan(p_Z)))
-      disp('Number of NaNs in Octave-computed posterior:')
-      p_Z_slow = computePosteriorSlow(mus, Sigmas, pi, rho, X, d, K);
-      sum(sum(isnan(p_Z_slow)))
-      more off
-      error('Pre-normalized p_Z contains NaNs')
-    endif
-    if(!isreal(p_Z))
-      more on
-      p_Z
-      rho
-      mus 
-      Sigmas
-      more off
-      error('Pre-normalized p_Z not real')
-    endif
+    % XXX Commenting the values out.
+    %if(sum(sum(p_Z < 0)))
+    %  more on
+    %  p_Z_slow = computePosteriorSlow(mus, Sigmas, pi, rho, X, d, K);
+    %  disp('Number of negative entries in fast posterior:')
+    %  sum(sum(p_Z < 0))
+    %  disp('Number of negative entries in slow posterior:')
+    %  sum(sum(p_Z_slow < 0))
+    %  save badposteriorparams.mat mus Sigmas pi rho X d K p_Z;
+    %  more off
+    %  error('Pre-normalized p_Z contains negative entries')
+    %endif
+    %if(sum(sum(isnan(p_Z))) != 0)
+    %  more on
+    %  p_Z
+    %  Sigmas
+    %  mus
+    %  rho
+    %  pi
+    %  disp('Number of NaNs in C++-computed posterior:')
+    %  sum(sum(isnan(p_Z)))
+    %  disp('Number of NaNs in Octave-computed posterior:')
+    %  p_Z_slow = computePosteriorSlow(mus, Sigmas, pi, rho, X, d, K);
+    %  sum(sum(isnan(p_Z_slow)))
+    %  more off
+    %  error('Pre-normalized p_Z contains NaNs')
+    %endif
+    %if(!isreal(p_Z))
+    %  more on
+    %  p_Z
+    %  rho
+    %  mus 
+    %  Sigmas
+    %  more off
+    %  error('Pre-normalized p_Z not real')
+    %endif
     % Fill up 0-entries.
-    p_Z = replaceZeros(p_Z);
+    %p_Z = replaceZeros(p_Z);
     % Normalization
-    p_Z = e.^(log(p_Z) .- log(sum(p_Z)));
-    if(!isreal(p_Z))
-      p_Z
-      error('Posterior contains complex entries')
-    endif
-    if(sum(sum(isnan(p_Z))) != 0)
-      more on
-      p_Z
-      Sigmas
-      mus
-      rho
-      pi
-      more off
-      error('p_Z contains NaNs')
-    endif
-    sum_p_Z = sum(p_Z);
-    % DEBUG
-    if(sum(sum(isnan(p_Z))) != 0)
-      p_Z
-      Sigmas
-      mus
-      rho
-      pi
-    endif
-    assert(sum(sum(isnan(p_Z))) == 0)
-    sum_p_Z = sum(p_Z);
+    % XXX Verify
+    %p_Z = e.^(log(p_Z) .- log(sum(p_Z)));
+    sum_p_Z = zeros(1, N);
+    for n = 1:N
+      p_Z_n = p_Z{n};
+      p_Z_n(2, :) = log(p_Z_n(2, :)) .- log(sum(p_Z_n(2, :)));
+      p_Z_n(2, :) = e.^p_Z_n(2, :);
+      p_Z{n} = p_Z_n;
+      sum_p_Z(1, n) = sum(p_Z_n(2, :), 2);
+    endfor
+    % XXX Removing debug statements
+    %if(!isreal(p_Z))
+    %  p_Z
+    %  error('Posterior contains complex entries')
+    %endif
+    %if(sum(sum(isnan(p_Z))) != 0)
+    %  more on
+    %  p_Z
+    %  Sigmas
+    %  mus
+    %  rho
+    %  pi
+    %  more off
+    %  error('p_Z contains NaNs')
+    %endif
+    %sum_p_Z = sum(p_Z);
+    %% DEBUG
+    %if(sum(sum(isnan(p_Z))) != 0)
+    %  p_Z
+    %  Sigmas
+    %  mus
+    %  rho
+    %  pi
+    %endif
+    %assert(sum(sum(isnan(p_Z))) == 0)
+    %sum_p_Z = sum(p_Z);
     disp('E-step toc')
     toc()
 
     % M-step
     disp('M-step rho')
     tic()
-    % rho
-    for l = 1:K^I
-      rho(l) = p_Z(l, :)*d';
-    endfor
-    sum_p_Z = sum(p_Z, 2);
-    rho = rho ./ sum_p_Z;
-    % Test whether all rho values are ok.
-    if(sum(isnan(rho)) != 0)
-      sum_p_Z
-      min(sum_p_Z)
-      p_Z
-      pi
-      d
-      rho
-      error('There are NaN entries in rho!')
-    endif
-    % Are there any vaules outstide [0, 1]?
-    idx = rho < 0;
-    if(any(idx))
-      rho(idx) = 0;
-      warning('There are sub-zero rhos: capped them.')
-    endif
-    idx = rho > 1;
-    if(any(idx))
-      rho(idx) = 1;
-      warning('There are rhos greater than 1.0: capped them.')
-    endif
+    rho = maxRho(rho, K, I, p_Z, d, N);
     toc()
     % pi, mus
     disp('M-step pi, mus')
@@ -184,7 +169,10 @@ function [mus, Sigmas, rho, pi] = learnExactIndependent(K, X, d, max_iter = 20)
     % Sigmas
     disp('M-step Sigmas')
     tic()
-    [Sigmas] = maxSigmas(X, mus, p_Z);
+    %[Sigmas] = maxSigmas(X, mus, p_Z);
+    toc()
+    tic()
+    Sigmas = maxSigmasVectorized(X, mus, p_Z, D, K, I, N);
     % DEBUG
     if(!isreal(Sigmas))
       more on
@@ -195,23 +183,6 @@ function [mus, Sigmas, rho, pi] = learnExactIndependent(K, X, d, max_iter = 20)
       error('Freshly maximized Sigmas contain some imaginary entries')
     endif
     toc()
-    %tic()
-    %Sigmas = Sigmas .* 0;
-    %for i = 1:I
-    %  for k = 1:K
-    %    Sigma_norm = 0;
-    %    for n = 1:N
-    %      diff_n = X(:, :, n) - reshape(mus(:, k, :), D, I);
-    %      for l = 1:K^I
-    %        [Z_n, z] = dec2oneOfK(l, K, I);
-    %        Sigmas(:, :, k, i) = Sigmas(:, :, k, i) + p_Z(l, n) * Z_n(k, i) * diff_n(:, i) * diff_n(:, i)';
-    %        Sigma_norm = Sigma_norm + p_Z(l, n) * Z_n(k, i);
-    %      endfor
-    %    endfor
-    %    Sigmas(:, :, k, i) = Sigmas(:, :, k, i) ./ Sigma_norm;
-    %  endfor
-    %endfor
-    %toc()
     %assert(sum(sum(sum(sum(abs(Sigmas - Sigmas_fast))))) < 0.0001)
 
     % Handle singular covariance matrices.
@@ -304,7 +275,7 @@ function S = replaceSingularCovariance(Sigmas)
 endfunction
 
 function p_Z = replaceZeros(p_Z)
-  [L, N] = size(p_Z);
+  [N, Foo]= size(p_Z)
   for n = 1:N
     % First get the indices of the 0-valued entries.
     idx = p_Z(:, n) == 0;

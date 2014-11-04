@@ -13,7 +13,7 @@ function [mus, pi] = maxMuPiVectorized(p_Z, X, K)
       global kay
       kay = k;
       % Prepare the data as cells
-      p_Z_c = reshape(mat2cell(p_Z, K^I, ones(1, N)), N);
+      p_Z_c = p_Z;
       X_i_c = reshape(mat2cell(X(:, i, :), D, 1, ones(1, N)), N);
       %[m, p] = parcellfun(nproc(), @maxMuPiN, p_Z_c, X_i_c, 'UniformOutput', false, 'ErrorHandler', @(err) disp(err));
       [m, p] = cellfun(@maxMuPiN, p_Z_c, X_i_c, 'UniformOutput', false, 'ErrorHandler', @(err) disp(err));
@@ -34,12 +34,13 @@ function [mu, pi] = maxMuPiN(p_Z_n, x_i_n)
 
   mu = zeros(D, 1);
   pi = 0;
-  for l = 1:Kay^I
+  %for l = 1:Kay^I
+  for l = p_Z_n(1, :)
     [Z_n, z] = dec2oneOfK(l, Kay, I);
     % pi
-    pi = pi + Z_n(kay, iy) * p_Z_n(l);
+    pi = pi + Z_n(kay, iy) * p_Z_n(2, p_Z_n(1, :) == l);
     % mus
-    mu = mu + p_Z_n(l) * Z_n(kay, iy) * x_i_n;
+    mu = mu + p_Z_n(2, p_Z_n(1, :) == l) * Z_n(kay, iy) * x_i_n;
   endfor
   % XXX The loop is a lot faster than the closure. Why are closures so slow? Can they be avoided? How to pass in invariant arguments otherwise?
   %[pi_, mu_] = arrayfun(createMaxMuPiL(Kay, I, kay, iy, x_i_n), [1:Kay^I]', p_Z_n, 'UniformOutput', false);

@@ -5,10 +5,12 @@ pkg load statistics
 pkg load nan
 pkg load parallel
 
+global para = false;
+
 D = 10;
-I = 6;
+I = 7;
 K = 3;
-N = 50;
+N = 5;
 
 mus = rand(D, K, I);
 Sigmas = eye(D)(:, :, ones(1, K), ones(1, I));
@@ -26,7 +28,7 @@ d = binornd(ones(1, N), 0.5);
 
 tic()
 disp('Approximate parallel')
-p_Z_appr_vec = computePosteriorApproximateVectorized(mus, Sigmas, pi, rho, X, d, K);
+p_Z_appr_vec = computePosteriorApproximateVectorized(mus, Sigmas, pi, mat2cell(rho, ones(K^I, 1)), X, d, K);
 toc()
 
 tic()
@@ -44,8 +46,17 @@ disp('Exact parallel')
 p_Z_vec = computePosteriorVectorized(mus, Sigmas, pi, rho, X, d, K);
 toc()
 
-%p_Z_slo
-%p_Z_appr
-mean(mean(abs(p_Z_appr - p_Z_appr_vec)))
+diffs = zeros(N, K^I);
+for n = 1:N
+  for l = 1:K^I
+    idx = p_Z_appr_vec{n}(1, :) == l;
+    if(sum(idx) == 0)
+      diffs(n, l) = abs(p_Z_appr(l, n) - 0);
+    else
+      diffs(n, l) = abs(p_Z_appr(l, n) - p_Z_appr_vec{n}(2, idx));
+    endif
+  endfor
+endfor
+mean(mean(diffs))
 mean(mean(abs(p_Z_appr - p_Z_slo)))
 

@@ -15,12 +15,12 @@ It = 25;
 min_K = 2;
 max_K = 2;
 min_N = 1;
-max_N = 500;
+max_N = 50;
 refresh_rate = 100;
 win_len = 1000;
 cross_S = 8;
 
-global deter = false;
+global deter = true;
 global para = true;
 global crossred = false;
 

@@ -3,14 +3,12 @@ function p_Z = computePosteriorApproximateVectorized(mus, Sigmas, pi, rho, X, d,
     % Inspect the dims.
     [D, D, K, I] = size(Sigmas);
     [D, I, N] = size(X);
-    % TODO Change the format here.
-    %p_Z = -Inf*ones(K^I, N);
     % The following allocates memory, that is needed in the l-loop. Putting it hear to avoid highly-frequent re-allocation.
     % select the right mus; needed in the l-loop;
     mus_l = zeros(D, I);
     z_idx = zeros(I, 1);
     Sigmas_l = zeros(D, D, I);
-    % TODO Use cellfun and parcellfun to compute the posterior data-parallel.
+    % Use cellfun and parcellfun to compute the posterior data-parallel.
     X_c = reshape(mat2cell(X, D, I, ones(N, 1)), N);
     d_c = mat2cell(d, 1, ones(N, 1))';
     global para;
@@ -20,15 +18,20 @@ function p_Z = computePosteriorApproximateVectorized(mus, Sigmas, pi, rho, X, d,
     else
       p_Z = cellfun(createComputePosteriorN(mus, Sigmas, pi, rho, K, I, D), X_c, d_c, 'UniformOutput', false, 'ErrorHandler', @(err) disp(err));
     endif
-    % Convert to array.
-    p_Z = reshape(cell2mat(p_Z), K^I, N);
     % Scale the values, so that the largest un-normalized entry for the posterior for one n is 10.
-    max_entries = max(p_Z);
-    p_Z = p_Z - max_entries + log(10);
-    assert(!any(any(isnan(p_Z))))
-    % Un-log
-    p_Z = e.^p_Z;
-    assert(!any(any(isnan(p_Z))))
+    max_entries = zeros(1, N);
+    % XXX Vectorize if too slow, by mapping to the max entry for each list.
+    for n = 1:N
+      max_p = max(p_Z{n}(2, :));
+      % Scale
+      for nl = 1:length(p_Z{n}(1, :))
+        p_Z{n}(2, nl) += -max_p + log(10);
+        % Un-log
+        p_Z{n}(2, nl) = e.^p_Z{n}(2, nl);
+      endfor
+      assert(!isnan(p_Z{n}))
+      assert(!isnan(p_Z{n}))
+    endfor
     % normalize
     %p_Z = p_Z ./ sum(p_Z);
     %p_Z = e.^(log(p_Z) .- log(sum(p_Z)));
@@ -55,8 +58,6 @@ function p_Z_n = computePosteriorN(X_n, d_n, mus, Sigmas, pi, rho, K, I, D)
   x_tol_min = 0.01;
   pi_tol_range = 1;
   pi_tol_min = 0.01;
-  % Allocate.
-  p_Z_n = -Inf*ones(K^I, 1);
   % Compute the probabilities for all components.
   log_p_X_n = zeros(K, I);
   for k = 1:K
@@ -72,7 +73,6 @@ function p_Z_n = computePosteriorN(X_n, d_n, mus, Sigmas, pi, rho, K, I, D)
   else
     rhos_idx = [1:K^I](rho < rho_tol)';
   endif
-  disp(['#rho states: ', num2str(length(rhos_idx)), '/', num2str(K^I)])
   % (idx, rhos) x amount of relevant rhos
   log_p_d_n = zeros(2, length(rhos_idx));
   log_p_d_n(1, :) = rhos_idx;
@@ -106,6 +106,10 @@ function p_Z_n = computePosteriorN(X_n, d_n, mus, Sigmas, pi, rho, K, I, D)
   % TODO Return the relevant states and probs for X_n for maximization.
   % Compute the posterior for the relevant states.
   disp(['Using ', num2str(length(glob_states)), '/', num2str(K^I), ' global states.'])
+  % Allocate the global state array for this n.
+  % (index, state)
+  p_Z_n = zeros(2, length(glob_states));
+  nl = 1;
   for l = glob_states
     [Z_n, z] = dec2oneOfK(l, K, I);
     % z_idx = (base2dec(z(1, :)', K)) + 1;
@@ -128,19 +132,18 @@ function p_Z_n = computePosteriorN(X_n, d_n, mus, Sigmas, pi, rho, K, I, D)
     % compute the posterior for the current state and observation
     % TODO Change the format of p_Z to contain idxs and the posterior.
     % TODO Change the format of rho to contain idxs and the parameter values.
-    p_Z_n(l) = log(rho(l)^d_n) + log((1 - rho(l))^(1 - d_n));
+    p_Z_n(1, nl) = l;
+    p_Z_n(2, nl) = log(rho(l)^d_n) + log((1 - rho(l))^(1 - d_n));
     % DEBUG
-    if(!isreal(p_Z_n(l)))
+    if(!isreal(p_Z_n(2, nl)))
       more on
       rho
       pi_l(i)
-      log_p_x_n_i
-      p_Z(l, n)
+      p_Z_n(2, nl)
       l
-      n
-      i
+      nl
+      error('p_Z_n(l) is not real')
       more off
-      error('p_Z(l, n) is not real')
     endif
     % Prepare inputs for vectorization.
     % XXX Not sure whether mat2cell is any faster than the for loop here.
@@ -156,20 +159,18 @@ function p_Z_n = computePosteriorN(X_n, d_n, mus, Sigmas, pi, rho, K, I, D)
     mus_c = mat2cell(mus_l, D, ones(1, I));
     Sigmas_c = reshape(mat2cell(Sigmas_l, D, D, ones(1, I)), 1, I);
     log_p_x_n_is = cellfun('logmvnpdf', X_c, mus_c, Sigmas_c);
-    p_Z_n(l) = p_Z_n(l) + sum(log(pi_l)) + sum(log_p_x_n_is);
+    p_Z_n(2, nl) = p_Z_n(2, nl) + sum(log(pi_l)) + sum(log_p_x_n_is);
     % DEBUG
-    if(!isreal(p_Z_n(l)))
+    if(!isreal(p_Z_n(2, nl)))
       more on
       rho
       pi_l(i)
-      log_p_x_n_is
-      p_Z(l, n)
+      p_Z_n(2, nl)
       l
-      n
-      i
       more off
       error('p_Z(l, n) is not real')
     endif
+    nl += 1;
   endfor
 endfunction
 
