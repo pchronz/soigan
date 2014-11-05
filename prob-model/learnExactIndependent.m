@@ -169,9 +169,6 @@ function [mus, Sigmas, rho, pi] = learnExactIndependent(K, X, d, max_iter = 20)
     % Sigmas
     disp('M-step Sigmas')
     tic()
-    %[Sigmas] = maxSigmas(X, mus, p_Z);
-    toc()
-    tic()
     Sigmas = maxSigmasVectorized(X, mus, p_Z, D, K, I, N);
     % DEBUG
     if(!isreal(Sigmas))

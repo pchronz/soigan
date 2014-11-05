@@ -1,5 +1,8 @@
 *.swp
+*.swo
 *.pdf
 *.Rout
+*.o
+*.oct
 .Rhistory
 
