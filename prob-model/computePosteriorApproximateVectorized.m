@@ -1,5 +1,6 @@
 function p_Z = computePosteriorApproximateVectorized(mus, Sigmas, pi, rho, X, d, K)
     warning('off', 'Octave:broadcast');
+    save debug.mat mus Sigmas pi rho X d K
     % Inspect the dims.
     [D, D, K, I] = size(Sigmas);
     [D, I, N] = size(X);
@@ -23,13 +24,16 @@ function p_Z = computePosteriorApproximateVectorized(mus, Sigmas, pi, rho, X, d,
     % XXX Vectorize if too slow, by mapping to the max entry for each list.
     for n = 1:N
       max_p = max(p_Z{n}(2, :));
-      % Scale
-      for nl = 1:length(p_Z{n}(1, :))
-        p_Z{n}(2, nl) += -max_p + log(10);
-        % Un-log
-        p_Z{n}(2, nl) = e.^p_Z{n}(2, nl);
-      endfor
-      assert(!isnan(p_Z{n}))
+      if(max_p == -Inf)
+        p_Z{n}(2, :) = 1/length(p_Z{n}(2, :));
+      else
+        % Scale
+        for nl = 1:length(p_Z{n}(1, :))
+          p_Z{n}(2, nl) += -max_p + log(10);
+          % Un-log
+          p_Z{n}(2, nl) = e.^p_Z{n}(2, nl);
+        endfor
+      endif
       assert(!isnan(p_Z{n}))
     endfor
     % normalize
@@ -53,7 +57,7 @@ endfunction
 function p_Z_n = computePosteriorN(X_n, d_n, mus, Sigmas, pi, rho, K, I, D)
   % Tolerance values for min probs.
   % TODO Choose based on some rational reason.
-  rho_tol = 0.01;
+  rho_tol = 0.6;
   x_tol_range = 1;
   x_tol_min = 0.01;
   pi_tol_range = 1;
@@ -70,8 +74,18 @@ function p_Z_n = computePosteriorN(X_n, d_n, mus, Sigmas, pi, rho, K, I, D)
   rhos_idx = 0;
   if(d_n == 1)
     rhos_idx = [1:K^I](rho > rho_tol)';
+    %for l = rho
+    %  if(rhos_idx(2) > rho_tol)
+    %    rhos_idx(l(1)) = rhos_idx(l(2));
+    %  endif
+    %endfor
   else
-    rhos_idx = [1:K^I](rho < rho_tol)';
+    rhos_idx = [1:K^I](rho < 1 - rho_tol)';
+    %for l = rho
+    %  if(rhos_idx(2) > rho_tol)
+    %    rhos_idx(l(1)) = rhos_idx(l(2));
+    %  endif
+    %endfor
   endif
   % (idx, rhos) x amount of relevant rhos
   log_p_d_n = zeros(2, length(rhos_idx));
@@ -111,6 +125,9 @@ function p_Z_n = computePosteriorN(X_n, d_n, mus, Sigmas, pi, rho, K, I, D)
   p_Z_n = zeros(2, length(glob_states));
   nl = 1;
   for l = glob_states
+    if(mod(nl, 10000) == 0)
+      disp([num2str(nl), '/', num2str(length(glob_states))])
+    endif
     [Z_n, z] = dec2oneOfK(l, K, I);
     % z_idx = (base2dec(z(1, :)', K)) + 1;
     for i = 1:I

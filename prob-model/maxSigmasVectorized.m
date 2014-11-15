@@ -1,11 +1,18 @@
 function Sigmas = maxSigmasVectorized(X, mus, p_Z, D, K, I, N)
+  global para
   % XXX Replace with pre-allocated Sigma if the allocation takes to long.
   Sigmas = zeros(D, D, K, I);
   %Sigmas = Sigmas .* 0;
   for i = 1:I
     for k = 1:K
       X_c = reshape(mat2cell(X, D, I, ones(1, N)), N, 1);
-      [Sigma_kin, Sigma_norm_n] = cellfun(createMaxSigmasN(mus(:, k, :), D, K, I, N, k, i), X_c, p_Z, 'UniformOutput', false);
+      Sigma_kin = cell();
+      Sigma_norm_n = cell();
+      if(para)
+        [Sigma_kin, Sigma_norm_n] = parcellfun(nproc(), createMaxSigmasN(mus(:, k, :), D, K, I, N, k, i), X_c, p_Z, 'UniformOutput', false);
+      else
+        [Sigma_kin, Sigma_norm_n] = cellfun(createMaxSigmasN(mus(:, k, :), D, K, I, N, k, i), X_c, p_Z, 'UniformOutput', false);
+      endif
       % Reduce Sigma_kin and Sigma_norm_n by summing for all n.
       Sigmas(:, :, k, i) = sum(reshape(cell2mat(Sigma_kin'), D, D, N), 3);
       Sigma_norm = sum(cell2mat(Sigma_norm_n));

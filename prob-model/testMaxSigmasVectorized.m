@@ -5,6 +5,9 @@ pkg load statistics
 pkg load nan
 pkg load parallel
 
+global para;
+para = false;
+
 D = 10;
 I = 6;
 K = 3;
@@ -13,9 +16,11 @@ N = 20;
 mus = rand(D, K, I);
 Sigmas = eye(D)(:, :, ones(1, K), ones(1, I));
 pi = 1/K*ones(K, I);
-rho = 0.5 * ones(K^I, 1);
+rho = 0.5*zeros(1, K^I);
 X = rand(D, I, N);
 d = binornd(ones(1, N), 0.5);
+
+%load debug.mat
 
 % Before optimization (D, I, K, N) = (5, 5, 2, 200) --> ~= 13s.
 % Moving memory allocation out of the loops cut it down to ~= 6.5s.

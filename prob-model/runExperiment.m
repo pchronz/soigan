@@ -11,18 +11,18 @@ clear all
 
 % the experimental parameters
 Delay = [0:0];
-It = 25;
-min_K = 3;
-max_K = 3;
+It = 15;
+min_K = 2;
+max_K = 2;
 min_N = 1;
-max_N = 10;
+max_N = 500;
 refresh_rate = 100;
 win_len = 1000;
 cross_S = 8;
 
 global deter = false;
 global para = true;
-global crossred = false;
+global crossred = true;
 
 X = 0;
 d = 0;
@@ -32,9 +32,9 @@ if(deter)
 else
   disp('Preparing data set from scratch.')
   % N, I, R, D, K
-  [X, d] = createSyntheticData(max_N, 5, 3, 3, 3);
+  %[X, d] = createSyntheticData(max_N, 5, 3, 3, 3);
   %[X, d] = loadEwsData(max_N);
-  %[X, d] = loadGoeGridFullData(0, max_N);
+  [X, d] = loadGoeGridFullData(0, max_N);
   save detdata.mat X d
 endif
 
