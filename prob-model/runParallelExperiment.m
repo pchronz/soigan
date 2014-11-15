@@ -68,12 +68,12 @@ function runParallelExperiment(X, d, min_K, max_K, S = 10)
     baseline_prediction_parallel(:, s) = t_pred;
     baseline_correctness_parallel(:, :, test_idx:test_idx + length(d_test) - 1) = correctness;
 
-    %% Mixture Model
-    %disp('Mixture Model')
-    %[t_train, t_pred, correctness] = runMixtureParallelExperiment(X_tr, d_tr, X_test, d_test, min_K, max_K);
-    %mixture_training_parallel(:, s) = t_train;
-    %mixture_prediction_parallel(:, s) = t_pred;
-    %mixture_correctness_parallel(:, :, test_idx:test_idx + length(d_test) - 1) = correctness;
+    % Mixture Model
+    disp('Mixture Model')
+    [t_train, t_pred, correctness] = runMixtureParallelExperiment(X_tr, d_tr, X_test, d_test, min_K, max_K);
+    mixture_training_parallel(:, s) = t_train;
+    mixture_prediction_parallel(:, s) = t_pred;
+    mixture_correctness_parallel(:, :, test_idx:test_idx + length(d_test) - 1) = correctness;
 
     % Update the position of our result pointer.
     test_idx += length(d_test);
