@@ -21,7 +21,7 @@ function rho = maxRho(rho, K, I, p_Z, d, N)
     %pi
     %d
     %rho
-    warning('Some rhos are NaN. Going to replace with 0.5')
+    warning([num2str(sum(rho_nan)), '/', num2str(length(rho_nan)), 'rhos are NaN. Going to replace with 0.5'])
     rho(rho_nan) = 0.5;
   endif
   % Are there any vaules outstide [0, 1]?

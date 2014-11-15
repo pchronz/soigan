@@ -1,4 +1,5 @@
 function [mus, pi] = maxMuPiVectorized(p_Z, X, K)
+  global para;
   global D
   global Kay
   Kay = K;
@@ -16,7 +17,11 @@ function [mus, pi] = maxMuPiVectorized(p_Z, X, K)
       p_Z_c = p_Z;
       X_i_c = reshape(mat2cell(X(:, i, :), D, 1, ones(1, N)), N);
       %[m, p] = parcellfun(nproc(), @maxMuPiN, p_Z_c, X_i_c, 'UniformOutput', false, 'ErrorHandler', @(err) disp(err));
-      [m, p] = cellfun(@maxMuPiN, p_Z_c, X_i_c, 'UniformOutput', false, 'ErrorHandler', @(err) disp(err));
+      if(para)
+        [m, p] = parcellfun(nproc(), @maxMuPiN, p_Z_c, X_i_c, 'UniformOutput', false, 'ErrorHandler', @(err) disp(err));
+      else
+        [m, p] = cellfun(@maxMuPiN, p_Z_c, X_i_c, 'UniformOutput', false, 'ErrorHandler', @(err) disp(err));
+      endif
       pi(k, i) = sum(cell2mat(p));
       mus(:, k, i) = sum(cell2mat(m'), 2);
       mus(:, k, i) = mus(:, k, i) ./ pi(k, i);
