@@ -1,4 +1,4 @@
-function runParallelExperiment(X, d, min_K, max_K, S = 10)
+function runParallelExperiment(X, d, min_K, max_K, S = 10, Iterations = 15)
   disp('Starting the parallel experiment')
   % PARALLEL EXPERIMENT
   [D, I, N] = size(X);
@@ -176,7 +176,7 @@ function [t_train, t_pred, correctness] = runMixtureParallelExperiment(X_tr, d_t
   for K = min_K:max_K
     disp('Mixture model training --- parallel')
     tic()
-    [mus, Sigmas, rho, pi] = learnExactIndependent(K, X_tr, d_tr, 50);
+    [mus, Sigmas, rho, pi] = learnExactIndependent(K, X_tr, d_tr, Iterations);
     t_train(K) = toc();
     disp('Mixture model prediction --- parallel')
     tic()
