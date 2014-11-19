@@ -45,6 +45,7 @@ function runParallelExperiment(X, d, min_K, max_K, S = 10, Iterations = 15)
   test_idx = 1;
 
   for s = 1:S
+    s
     [X_tr, d_tr, X_test, d_test] = splitDataRand(X_red, d, 0.5);
 
     % Bernoulli
@@ -70,7 +71,7 @@ function runParallelExperiment(X, d, min_K, max_K, S = 10, Iterations = 15)
 
     % Mixture Model
     disp('Mixture Model')
-    [t_train, t_pred, correctness] = runMixtureParallelExperiment(X_tr, d_tr, X_test, d_test, min_K, max_K);
+    [t_train, t_pred, correctness] = runMixtureParallelExperiment(X_tr, d_tr, X_test, d_test, min_K, max_K, Iterations);
     mixture_training_parallel(:, s) = t_train;
     mixture_prediction_parallel(:, s) = t_pred;
     mixture_correctness_parallel(:, :, test_idx:test_idx + length(d_test) - 1) = correctness;
@@ -169,25 +170,27 @@ function [t_train, t_pred, correctness] = runApproximateParallelExperiment(X_tr,
   endfor
 endfunction
 
-function [t_train, t_pred, correctness] = runMixtureParallelExperiment(X_tr, d_tr, X_test, d_test, min_K, max_K)
+function [t_train, t_pred, correctness] = runMixtureParallelExperiment(X_tr, d_tr, X_test, d_test, min_K, max_K, Iterations)
   t_train = zeros(max_K, 1);
   t_pred = zeros(max_K, 1);
   correctness = zeros(max_K, 2, length(d_test));
   for K = min_K:max_K
     disp('Mixture model training --- parallel')
     tic()
-    [mus, Sigmas, rho, pi] = learnExactIndependent(K, X_tr, d_tr, Iterations);
+    [mus, Sigmas, rho, rho_nan, pi] = learnExactIndependent(K, X_tr, d_tr, Iterations);
     t_train(K) = toc();
     disp('Mixture model prediction --- parallel')
     tic()
     correctness(K, 1, :) = d_test;
+    % TODO Run in parallel.
     for n = 1:length(d_test)
-      [p_0, p_1] = predictExactIndependent(X_test(:, :, n), mus, Sigmas, rho, pi);
-      t_pred(K) = toc();
-	assert(p_0 + p_1 <= 1.005)
-	assert(p_0 + p_1 >= 0.995)
-      correctness(K, 2, n) = double((p_0 < p_1));
+      if(mod(n, 50) == 0)
+        disp(['n = ', num2str(n), '/', num2str(length(d_test))])
+      endif
+      p_0 = predictExactIndependent(X_test(:, :, n), mus, Sigmas, rho_nan, pi);
+      correctness(K, 2, n) = double((p_0 < 0.5));
     endfor
+    t_pred(K) = toc();
   endfor
 endfunction
 

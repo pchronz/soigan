@@ -1,4 +1,4 @@
-function [mus, Sigmas, rho, pi] = learnExactIndependent(K, X, d, max_iter = 20)
+function [mus, Sigmas, rho, rho_nan, pi] = learnExactIndependent(K, X, d, max_iter = 20)
   global deter;
   disp('Init tic')
   tic()
@@ -153,7 +153,7 @@ function [mus, Sigmas, rho, pi] = learnExactIndependent(K, X, d, max_iter = 20)
     % M-step
     disp('M-step rho')
     tic()
-    rho = maxRho(rho, K, I, p_Z, d, N);
+    [rho, rho_nan] = maxRho(rho, K, I, p_Z, d, N);
     toc()
     % pi, mus
     disp('M-step pi, mus')

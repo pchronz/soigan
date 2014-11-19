@@ -1,4 +1,4 @@
-function rho = maxRho(rho, K, I, p_Z, d, N)
+function [rho, rho_nan] = maxRho(rho, K, I, p_Z, d, N)
   % rho
   rho = zeros(1, K^I);
   sum_p_Z = zeros(1, K^I);
@@ -12,17 +12,18 @@ function rho = maxRho(rho, K, I, p_Z, d, N)
   endfor
   % In case we encounter a very improbable global state, assign 0.5 to the rho, since we just don't know any better. 
   rho = rho ./ sum_p_Z;
+  rho_nan = rho;
   % Test whether all rho values are ok.
-  rho_nan = isnan(rho);
-  if(sum(rho_nan) != 0)
+  idx_nan = isnan(rho);
+  if(sum(idx_nan) != 0)
     %sum_p_Z
     %min(sum_p_Z)
     %p_Z
     %pi
     %d
     %rho
-    warning([num2str(sum(rho_nan)), '/', num2str(length(rho_nan)), 'rhos are NaN. Going to replace with 0.5'])
-    rho(rho_nan) = 0.5;
+    warning([num2str(sum(idx_nan)), '/', num2str(length(idx_nan)), 'rhos are NaN. Going to replace with 0.5'])
+    rho(idx_nan) = 0.5;
   endif
   % Are there any vaules outstide [0, 1]?
   idx = rho < 0;

@@ -11,18 +11,18 @@ clear all
 
 % the experimental parameters
 Delay = [0:0];
-It = 15;
+It = 2;
 min_K = 2;
 max_K = 2;
 min_N = 1;
-max_N = 1500;
+max_N = 300;
 refresh_rate = 100;
 win_len = 1000;
 cross_S = 8;
 
 global deter = false;
 global para = true;
-global crossred = true;
+global crossred = false;
 
 X = 0;
 d = 0;
