@@ -14,7 +14,7 @@ function p_0 = predictExactIndependent(X_next, mus, Sigmas, rho, pi)
   p_X_ks = zeros(K, I);
   for k = 1:K
     for i = 1:I
-      p_X_ks(k, i) = mvnpdf(X_next(:, i)', mus(:, k, i)', Sigmas(:, :, k, i))';
+      p_X_ks(k, i) = mvnpdff(X_next(:, i)', mus(:, k, i)', Sigmas(:, :, k, i))';
     endfor
   endfor
   %% XXX Workaround
@@ -43,4 +43,43 @@ function p_0 = predictExactIndependent(X_next, mus, Sigmas, rho, pi)
 endfunction
 
 
+function pdf = mvnpdff (x, mu = 0, sigma = 1)
+  ## Check input
+  if (!ismatrix (x))
+    error ("mvnpdf: first input must be a matrix");
+  endif
+  
+  if (!isvector (mu) && !isscalar (mu))
+    error ("mvnpdf: second input must be a real scalar or vector");
+  endif
+  
+  if (!ismatrix (sigma) || !issquare (sigma))
+    error ("mvnpdf: third input must be a square matrix");
+  endif
+
+  [ps, ps] = size (sigma);
+  [d, p] = size (x);
+  if (p != ps)
+    error ("mvnpdf: dimensions of data and covariance matrix does not match");
+  endif
+  
+  if (numel (mu) != p && numel (mu) != 1)
+    error ("mvnpdf: dimensions of data does not match dimensions of mean value");
+  endif
+  
+  mu = mu (:).';
+  if (all (size (mu) == [1, p]))
+    mu = repmat (mu, [d, 1]);
+  endif
+  
+  if (nargin < 3)
+    pdf = (2*pi)^(-p/2) * exp (-sumsq (x-mu, 2)/2);
+  else
+    r = chol (sigma);
+    pdf = (2*pi)^(-p/2);
+    foo = (x-mu)/r;
+    pdf = pdf * exp (-sum(foo .* foo, 2)/2);
+    pdf = pdf / prod (diag (r));
+  endif
+endfunction
 

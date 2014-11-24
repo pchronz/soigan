@@ -11,7 +11,7 @@ clear all
 
 % the experimental parameters
 Delay = [0:0];
-It = 2;
+It = 15;
 min_K = 2;
 max_K = 2;
 min_N = 1;

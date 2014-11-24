@@ -171,6 +171,7 @@ function [t_train, t_pred, correctness] = runApproximateParallelExperiment(X_tr,
 endfunction
 
 function [t_train, t_pred, correctness] = runMixtureParallelExperiment(X_tr, d_tr, X_test, d_test, min_K, max_K, Iterations)
+  global para
   t_train = zeros(max_K, 1);
   t_pred = zeros(max_K, 1);
   correctness = zeros(max_K, 2, length(d_test));
@@ -182,15 +183,22 @@ function [t_train, t_pred, correctness] = runMixtureParallelExperiment(X_tr, d_t
     disp('Mixture model prediction --- parallel')
     tic()
     correctness(K, 1, :) = d_test;
-    % TODO Run in parallel.
-    for n = 1:length(d_test)
-      if(mod(n, 50) == 0)
-        disp(['n = ', num2str(n), '/', num2str(length(d_test))])
-      endif
-      p_0 = predictExactIndependent(X_test(:, :, n), mus, Sigmas, rho_nan, pi);
-      correctness(K, 2, n) = double((p_0 < 0.5));
-    endfor
+    % Prepare the data for the paralle run.
+    [D, I, N_test] = size(X_test);
+    X_c = reshape(mat2cell(X_test, D, I, ones(N_test, 1)), N_test) ;
+    % Run in parallel.
+    p_0s = 0;
+    if(para)
+       p_0s = parcellfun(nproc(), createPredictExactIndependentN(mus, Sigmas, rho_nan, pi), X_c, 'ErrorHandler', @(err) disp(err));
+    else
+       p_0s = cellfun(createPredictExactIndependentN(mus, Sigmas, rho_nan, pi), X_c, 'ErrorHandler', @(err) disp(err));
+    endif
+    correctness(K, 2, :) = double(p_0s < 0.5);
     t_pred(K) = toc();
   endfor
+endfunction
+
+function f = createPredictExactIndependentN(mus, Sigmas, rho_nan, pi)
+  f = @(X_test_n) predictExactIndependent(X_test_n, mus, Sigmas, rho_nan, pi);
 endfunction
 
